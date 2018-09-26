@@ -6,6 +6,7 @@ This environment is built to learn and demo the following SAP HANA tasks:
 * Software baselining and provision from Red Hat Satellite 6
 * Automated deployment and management with Ansible Tower
 
+## Content
 * [Path to HANA - Lab Guides](doc)
 
 ## Releases - Path to HANA (pre)
