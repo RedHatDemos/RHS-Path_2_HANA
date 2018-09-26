@@ -1,0 +1,138 @@
+:scrollbar:
+:data-uri:
+:toc2:
+:imagesdir: images
+
+== Path to HANA - Lab Guide
+
+:numbered:
+
+== Overview
+
+This Lab Environment uses Ansible Tower to deploy SAP HANA Express on Red Hat Enterprise Linux 7
+
+The password to access all services is available link:https://mojo.redhat.com/docs/DOC-1174612-accessing-red-hat-solutions-lab-in-rhpds[here]
+
+.Goal
+* Automatically deploy SAP HANA 
+
+Required versions of products used:
+
+[cols="1,1",options="header"]
+|=======
+|Product |Version
+|Red Hat CloudForms |4.6.4
+|Red Hat Enterprise Linux |7.5
+|Ansible Tower |3.3.0
+|Red Hat Satellite |6.4
+|=======
+
+== Requirements to access and perform this lab
+
+=== Base requirements
+
+* A computer with access to Internet :-)
+* SSH client (for Microsoft Windows users link:https://www.putty.org/[Putty] is recommended)
+* Firefox 17 or higher, or Chromium / Chrome
+
+=== Obtaining or enabling access credentials
+
+. First time login, forgot login or password? Go to https://www.opentlc.com/account 
+
+. Your username should NOT have an *@* in it. 
+
+. Partners MUST request access to RHPDS by sending an email to open-program@redhat.com. 
+
+. Passwords to the services is referred as `<to_be_provided>`. The password to access all services is available link:https://mojo.redhat.com/docs/DOC-1174612-accessing-red-hat-solutions-lab-in-rhpds[here]. If you can't access it please contact GPTE or the link:https://mojo.redhat.com/community/marketing/vertical-marketing/horizontal-solutions/people[Horizontal Solutions Team].
+
+== Preparation
+
+=== Provision Your Demo Environment
+
+. Log in to the link:https://rhpds.redhat.com/[Red Hat Product Demo System] with your provided credentials. 
++
+image::rhpds_login.png[RHPDS]
+
+[start=2]
+. Go to *Services -> Catalogs*.
+. Under *All Services -> Red Hat Solutions*, select *Path 2 HANA (pre)"
+. On the right pane, click *Order*.
++
+image::rhpds_catalog.png[RHPDS]
++
+[NOTE]
+An account in `rhpds-access-beta` group is needed to access the demo
+
+[start=5]
+. Please, read carefully all of the information on the resulting page, check the box to confirm you understood the runtime warning message, and then click *Submit*.
++
+image::rhpds_order.png[RHPDS]
+
+[IMPORTANT]
+====
+* It takes about 20 ~ 25 minutes for the demo to load completely and become accessible.
+** Wait for the full demo to load, even if some of its systems are marked "Up."
+* Watch for an email with information about how to access your demo environment.
+** Make note of the email's contents: a list of hostnames, IP addresses, and your GUID.
+** Whenever you see <YOUR-GUID> in the demo instructions, replace it with the GUID provided in the email.
+* You can get real-time updates and status of your demo environment at https://www.opentlc.com/rhpds-status.
+====
+
+[TIP]
+Be mindful of the runtime of your demo environment! It may take several hours to complete the demo, so you may need to extend the runtime. This is especially important in later steps when you are building virtual machines. For information on how to extend runtime and lifetime, see https://www.opentlc.com/lifecycle.
+
+=== Environment
+
+A full new demo environment is deployed on every request. To make the environment unique a 4 character identifier is assigned to it (i.e. `1e37`), this identifier is referred in this documentation as *YOUR-GUID*.  
+
+The demo environment consists of the following systems:
+
+[cols="1,1,1,2",options="header"]
+|=======
+| Hostname | Internal IP | External name | Description
+|`tower.example.com` |`10.0.0.10` | tower-<YOUR-GUID>.rhpds.opentlc.com |Jump host and Ansible Tower host
+|`cf.example.com` |`10.0.0.100` |  cf-<YOUR-GUID>.rhpds.opentlc.com |CloudForms server
+|`hana0.example.com` |`10.0.0.20` | hana0-<YOUR-GUID>.rhpds.opentlc.com |SAP HANA host 
+|`hana1.example.com` |`10.0.0.21` | hana1-<YOUR-GUID>.rhpds.opentlc.com |SAP HANA host 
+|`satellite.example.com` |`10.0.0.101` | satellite-<YOUR-GUID>.rhpds.opentlc.com |Red Hat Satellite server
+|=======
+
+== Getting Started
+
+. Once the system is running, use SSH to access your demo server using your OPENTLC login name and private SSH key.
+
+* Using a Unix/Linux system:
++
+----
+$ ssh -i /path/to/private_key <YOUR-OpenTLC-USERNAME-redhat.com>@tower-<YOUR-GUID>.rhpds.opentlc.com
+----
+
+* Example for user 'batman' and GUID '1e37', using the default ssh private key:
++
+----
+$ ssh -i ~/.ssh/id_rsa batman-redhat.com@tower-1e37.rhpds.opentlc.com
+----
+
+. Become `root` using the provided password:
++
+----
+$ sudo -i
+----
+
+. Check the status of the environment using ansible:
++
+----
+# ansible all -m ping
+----
++
+This command establishes a connection to all the machines in the environment (except ESXi servers). 
+In case the machines are up an running a success message, per each, will show up. 
+This is an example of a success message for the VM jboss0.example.com:
++
+----
+cf.example.com | SUCCESS => {
+    "changed": false, 
+    "ping": "pong"
+}
+----
+

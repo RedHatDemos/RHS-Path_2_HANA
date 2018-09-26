@@ -1,0 +1,16 @@
+:scrollbar:
+:data-uri:
+:toc2:
+:imagesdir: images
+
+== Red Hat Solutions: Path to HANA
+
+Path to HANA is a solution to ease the baselining, deployment, upgrade and operation of SAP HANA and SAP S/4 HANA using the Red Hat Portfolio products, including Red Hat Enterprise Linux, Satellite, Ansible Tower, Insights, CloudForms and, in a second stage, Red Hat Virtualization.
+
+
+=== Path to HANA Guides
+
+. link:path_2_hana-lab_guide.adoc[Infrastructure Migration 1.0 Lab Guide]
+
+The password to access lab services is available link:https://mojo.redhat.com/docs/DOC-1174612-accessing-red-hat-solutions-lab-in-rhpds[here].
+
