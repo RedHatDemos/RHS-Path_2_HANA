@@ -1,0 +1,32 @@
+## Prepare Access to Lab environment
+
+Before you provision your lab environment you want to make sure that you can connect to your servers after the provisioning. This can be achieved via ssh public-keys or kerberos.
+
+### Setup SSH
+To access the jumphost via SSH, use your personal OPENTLC SSO username and public SSH key.
+
+NOTE: Unless otherwise noted, you cannot use SSH to connect directly as root.
+
+If you have not already done so, you must provide a public SSH key.
+
+ . Go to https://www.opentlc.com/update and log in.
+ . Paste your public key in the appropriate field.
+
+TIP: For more information on generating an SSH key, see: https://www.opentlc.com/ssh.html[Setting Up an SSH Key Pair].
+
+### Use Kerberos Authentication Instead of SSH Keys (Advanced)
+If you have problems using SSH keys, use Kerberos authentication instead. To do this you must be running on a UNIX/Linux or macOS host.
+
+NOTE: Windows hosts can support Kerberos, but it is beyond the scope of this class to provide instructions for implementing it.
+
+1. Make sure you have the following settings in `/etc/krb5.conf` on your host (not in the lab environment):
+
+  dns_lookup_realm = true
+  dns_lookup_kdc = true
+
+2. Use the following command to obtain a Kerberos ticket:
+
+   $ kinit your-sso-login@OPENTLC.COM
+   <enter your OPENTLC SSO password>
+
+IMPORTANT: Capitalize all letters of OPENTLC.COM, as shown.

@@ -11,10 +11,12 @@
 
 This Lab Environment uses Ansible Tower to deploy SAP HANA Express on Red Hat Enterprise Linux 7
 
+In this lab we will need two different environments. One environment is used for the Introduction to ansible and the other one is used for the installation of HANA.
+
 The password to access all services is available link:https://mojo.redhat.com/docs/DOC-1174612-accessing-red-hat-solutions-lab-in-rhpds[here]
 
 .Goal
-* Automatically deploy SAP HANA 
+* Automatically deploy SAP HANA. After this lab you will have a basic understanding of how ansible works and how to use and modify the predefined ansible roles for installing SAP HANA.
 
 Required versions of products used:
 
@@ -135,4 +137,22 @@ cf.example.com | SUCCESS => {
     "ping": "pong"
 }
 ----
+
+include::01-access-rhpds-labs.adoc[]
+
+== Ansible foundation
+
+include::10-provision-ansible-lab.adoc[]
+include::11-ansible-engine-short.adoc[]
+
+== SAP HANA on RHEL 7 with Ansible
+
+include::20-provision-hana-lab.adoc[]
+include::21-ansible-hana-labsetup.adoc[]
+include::22-ansible-hana-lab.adoc[]
+
+
+== The End
+
+Congratulations, you finished your labs! We hope you enjoyed your first steps using Ansible as much as we enjoyed creating the labs.
 
