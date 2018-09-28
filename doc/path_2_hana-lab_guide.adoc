@@ -1089,6 +1089,7 @@ When a template for a file has been created, it can be deployed to the managed h
 As an example of using templates you will change the motd file to contain host-specific data.
 
 In the `~/ansible-files/` directory on workstation-GUID as user ansible create the template file `motd-facts.j2`:
+
 ----
 Welcome to {{ ansible_hostname }}.
 {{ ansible_distribution }} {{ ansible_distribution_version}}
@@ -1096,6 +1097,7 @@ deployed on {{ ansible_architecture }} architecture.
 ----
 
 In the `~/ansible-files/` directory on workstation-GUID as user ansible create the Playbook `motd-facts.yml`:
+
 ----
 ---
 - name: Fill motd file with host data
@@ -1286,11 +1288,12 @@ WARNING: *Solution below!*
 ----
 [ansible@workstation-GUID ansible-files]$ ansible-playbook no_sshd_root.yml
 ----
+
 ----
 [ansible@workstation-GUID ansible-files]$ ssh root@servera.example.com
 root@servera.example.com's password:
 Permission denied, please try again.
----
+----
 
 == SAP HANA on RHEL 7 with Ansible
 
