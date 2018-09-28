@@ -138,8 +138,6 @@ cf.example.com | SUCCESS => {
 }
 ----
 
-include::01-access-rhpds-labs.adoc[]
-
 == Ansible foundation
 
 include::10-provision-ansible-lab.adoc[]
