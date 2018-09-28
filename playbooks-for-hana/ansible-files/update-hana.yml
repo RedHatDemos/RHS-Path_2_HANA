@@ -1,0 +1,46 @@
+---
+- name: Update Hana Server
+  hosts: hana1.example.com
+  become: yes
+
+  vars:
+              # Repositories setup
+              reg_osrelease: 7.2
+              repo_reset: false
+              repositories:
+                 - rhel-7-server-eus-rpms
+                 - rhel-sap-hana-for-rhel-7-server-eus-rpms
+              
+              sid: hxe
+
+  roles:
+              ## We can use this role to change  repsoitories, if we need to and to switch the minor relase
+              - { role: mk-ansible-roles.subscribe-rhn }
+
+  tasks:
+              ## update the system 
+              - name: ensure the the system is updated 
+                yum: name=* state=latest
+
+              ## stop database
+              - name: ensure HANA is stopped
+                command: su - "{{ sid + 'adm' }}" -c "HDB stop"
+
+              # Reboot the server now and wait until it is back
+              # inspired by https://support.ansible.com/hc/en-us/articles/201958037-Reboot-a-server-and-wait-for-it-to-come-back
+              - name: restart machine
+                shell: sleep 2 && shutdown -r now "Ansible updates triggered"
+                async: 1
+                poll: 0
+                become: true
+                ignore_errors: true
+
+              - name: waiting for server to come back
+                local_action: wait_for host={{ inventory_hostname }} port=22 state=started delay=90 sleep=2 timeout=900
+                become: false
+
+              ## start database again
+              - name: ensure HANA is started
+                command: su - "{{ sid + 'adm' }}" -c "HDB start"
+
+
