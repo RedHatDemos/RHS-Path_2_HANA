@@ -11,12 +11,10 @@
 
 This Lab Environment uses Ansible Tower to deploy SAP HANA Express on Red Hat Enterprise Linux 7
 
-In this lab we will need two different environments. One environment is used for the Introduction to ansible and the other one is used for the installation of HANA.
-
 The password to access all services is available link:https://mojo.redhat.com/docs/DOC-1174612-accessing-red-hat-solutions-lab-in-rhpds[here]
 
 .Goal
-* Automatically deploy SAP HANA. After this lab you will have a basic understanding of how ansible works and how to use and modify the predefined ansible roles for installing SAP HANA.
+* Automatically deploy SAP HANA. After this lab you will have a basic understanding of how to use and modify the predefined ansible roles for installing SAP HANA with Ansible Tower and Red Hat CloudForms.
 
 Required versions of products used:
 
@@ -34,16 +32,16 @@ Required versions of products used:
 === Base requirements
 
 * A computer with access to Internet :-)
-* SSH client (for Microsoft Windows users link:https://www.putty.org/[Putty] is recommended)
+* SSH client (for Microsoft Windows users link:https://www.putty.org/[Putty] or link:https://mobaxterm.mobatek.net/download.html[MobaXterm] is recommended)
 * Firefox 17 or higher, or Chromium / Chrome
 
 === Obtaining or enabling access credentials
 
-. First time login, forgot login or password? Go to https://www.opentlc.com/account 
+. First time login, forgot login or password? Go to https://www.opentlc.com/account
 
-. Your username should NOT have an *@* in it. 
+. Your username should NOT have an *@* in it.
 
-. Partners MUST request access to RHPDS by sending an email to open-program@redhat.com. 
+. Partners MUST request access to RHPDS by sending an email to open-program@redhat.com.
 
 . Passwords to the services is referred as `<to_be_provided>`. The password to access all services is available link:https://mojo.redhat.com/docs/DOC-1174612-accessing-red-hat-solutions-lab-in-rhpds[here]. If you can't access it please contact GPTE or the link:https://mojo.redhat.com/community/marketing/vertical-marketing/horizontal-solutions/people[Horizontal Solutions Team].
 
@@ -51,7 +49,7 @@ Required versions of products used:
 
 === Provision Your Demo Environment
 
-. Log in to the link:https://rhpds.redhat.com/[Red Hat Product Demo System] with your provided credentials. 
+. Log in to the link:https://rhpds.redhat.com/[Red Hat Product Demo System] with your provided credentials.
 +
 image::rhpds_login.png[RHPDS]
 
@@ -85,7 +83,7 @@ Be mindful of the runtime of your demo environment! It may take several hours to
 
 === Environment
 
-A full new demo environment is deployed on every request. To make the environment unique a 4 character identifier is assigned to it (i.e. `1e37`), this identifier is referred in this documentation as *YOUR-GUID*.  
+A full new demo environment is deployed on every request. To make the environment unique a 4 character identifier is assigned to it (i.e. `1e37`), this identifier is referred in this documentation as *YOUR-GUID*.
 
 The demo environment consists of the following systems:
 
@@ -94,8 +92,8 @@ The demo environment consists of the following systems:
 | Hostname | Internal IP | External name | Description
 |`tower.example.com` |`10.0.0.10` | tower-<YOUR-GUID>.rhpds.opentlc.com |Jump host and Ansible Tower host
 |`cf.example.com` |`10.0.0.100` |  cf-<YOUR-GUID>.rhpds.opentlc.com |CloudForms server
-|`hana0.example.com` |`10.0.0.20` | hana0-<YOUR-GUID>.rhpds.opentlc.com |SAP HANA host 
-|`hana1.example.com` |`10.0.0.21` | hana1-<YOUR-GUID>.rhpds.opentlc.com |SAP HANA host 
+|`hana0.example.com` |`10.0.0.20` | hana0-<YOUR-GUID>.rhpds.opentlc.com |SAP HANA host
+|`hana1.example.com` |`10.0.0.21` | hana1-<YOUR-GUID>.rhpds.opentlc.com |SAP HANA host
 |`satellite.example.com` |`10.0.0.101` | satellite-<YOUR-GUID>.rhpds.opentlc.com |Red Hat Satellite server
 |=======
 
@@ -127,18 +125,22 @@ $ sudo -i
 # ansible all -m ping
 ----
 +
-This command establishes a connection to all the machines in the environment (except ESXi servers). 
-In case the machines are up an running a success message, per each, will show up. 
+This command establishes a connection to all the machines in the environment (except ESXi servers).
+In case the machines are up an running a success message, per each, will show up.
 This is an example of a success message for the VM jboss0.example.com:
 +
 ----
 cf.example.com | SUCCESS => {
-    "changed": false, 
+    "changed": false,
     "ping": "pong"
 }
 ----
 
 == Ansible foundation
+
+This training requires the knowledge of the ansible foundation training. To fully understand this training you should have done the ansible foundation lab before you run this lab.
+
+////
 
 ### Provision the Ansible Lab Environment
 
@@ -160,7 +162,7 @@ You will have access to the following hosts:
 |===
 |Role|Hostname Ext|Hostname Int|Internal IP
 
-|Jump Host & Ansible Control Host|workstation-<GUID>.rhpds.opentlc.com|workstation.example.com |192.168.1.1
+|Jump Host & Ansible Control Host|tower-<GUID>.rhpds.opentlc.com|tower.example.com |192.168.1.1
 |Managed Host 1||servera.example.com|192.168.1.21
 |Managed Host 2||serverb.example.com|192.168.1.22
 
@@ -169,14 +171,15 @@ You will have access to the following hosts:
 WARNING: You will be able to SSH into the control host, from here you need to SSH into the other hosts.
 
 ////
+////
 This is required for environment in rhpds
 ////
-
+////
 === Install Ansible
 
-1. Connect to the control node (workstation):
+1. Connect to the control node (tower):
 
-   # ssh your-sso-login@workstation-GUID.rhpds.opentlc.com
+   # ssh your-sso-login@tower-GUID.rhpds.opentlc.com
 
 2. Become the `root` user:
 
@@ -194,10 +197,12 @@ This is required for environment in rhpds
     configured module search path = Default w/o overrides
 
 ////
+////
 Use this if you can prepare the environment
 ////
 ////
-
+////
+////
 == Check the Prerequisites
 
 Most prerequisite tasks have already been done for you:
@@ -218,27 +223,16 @@ ansible 2.5.0
 
 NOTE: Ansible is keeping configuration management simple. Ansible requires no database or running daemons and can run easily on a laptop. On the managed hosts it needs no running agent.
 
-Verify that the managed hosts accept password-less connections with key authentication from the workstation-GUID node as user ansible, e.g.:
+Double-check that the managed hosts accept password-less connections with key authentication from the tower-GUID node as user root, e.g.:
 ----
-[root@workstation-GUID ~]# su - ansible
-[ansible@workstation-GUID ~]$ ssh servera.example.com
-[ansible@servera ~]$ exit
+[root@tower ~]# ssh hana0.example.com
+[root@hana0 ~]$ exit
 ----
 ----
-[ansible@workstation-GUID ~]$ ssh serverb.example.com
-[ansible@serverb ~]$ exit
+[root@tower ~]$ ssh serverb.example.com
+[root@hana0 ~]$ exit
 ----
-
-To allow user ansible to execute commands on servera.example.com and serverb.example.com as root `sudo` needs to be configured on the managed hosts.
-
-Test that the configuration allows ansible to run commands using `sudo` on servera.example.com and serverb.example.com without a password, e.g.:
-----
-[ansible@workstation-GUID ~]$ ssh servera.example.com
-[ansible@servera ~]$ sudo cat /etc/shadow
-[ansible@servera ~]$ exit
-----
-
-NOTE: *In all subsequent exercises you should work as the ansible user on the control node if not explicitly told differently.*
+TIP: You can check the installation, disks of the server. It looks like a blank RHEL installation from DVD.
 
 ==== Working the Labs
 
@@ -255,15 +249,16 @@ TIP: The command line can wrap on the web page from time to time. Therefor the o
 
 You will soon discover that many chapters in this lab guide come with a "Challenge Lab" section. These labs are meant to give you a small task to solve using what you have learned so far. The solution of the task is shown underneath a warning sign.
 
+////
 === Getting Started with Ansible
 
 ==== The Inventory
 
 To use the ansible command for host management, you need to provide an inventory file which defines a list of hosts to be managed from the control node. One way to do this is to specify the path to the inventory file with the `-i` option to the ansible command.
 
-Make sure you are user ansible on workstation-GUID. Create a directory for your Ansible files:
+Make sure you are user ansible on tower-GUID. Create a directory for your Ansible files:
 ----
-[ansible@workstation-GUID ~]$ mkdir ansible-files
+[ansible@tower-GUID ~]$ mkdir ansible-files
 ----
 
 Now create a simple inventory file as `~/ansible-files/inventory` with the following content:
@@ -277,7 +272,7 @@ To reference inventory hosts, you supply a host pattern to the ansible command. 
 The most basic host pattern is the name for a single managed host listed in the inventory file. This specifies that the host will be the only one in the inventory file that will be acted upon by the ansible command. Run:
 
 ----
-[ansible@workstation-GUID ~]$ ansible "servera.example.com" -i ~/ansible-files/inventory --list-hosts
+[ansible@tower-GUID ~]$ ansible "servera.example.com" -i ~/ansible-files/inventory --list-hosts
 
   hosts (1):
     servera.example.com
@@ -297,10 +292,10 @@ serverb.example.com
 
 Now run Ansible with these host patterns and observe the output:
 ----
-[ansible@workstation-GUID ~]$ ansible webserver -i ~/ansible-files/inventory --list-hosts
-[ansible@workstation-GUID ~]$ ansible webserver,serverb.example.com -i ~/ansible-files/inventory --list-hosts
-[ansible@workstation-GUID ~]$ ansible '*.example.com' -i ~/ansible-files/inventory --list-hosts
-[ansible@workstation-GUID ~]$ ansible all -i ~/ansible-files/inventory --list-hosts
+[ansible@tower-GUID ~]$ ansible webserver -i ~/ansible-files/inventory --list-hosts
+[ansible@tower-GUID ~]$ ansible webserver,serverb.example.com -i ~/ansible-files/inventory --list-hosts
+[ansible@tower-GUID ~]$ ansible '*.example.com' -i ~/ansible-files/inventory --list-hosts
+[ansible@tower-GUID ~]$ ansible all -i ~/ansible-files/inventory --list-hosts
 ----
 
 TIP: It is ok to put systems in more than one group, for instance a server could be both a web server and a database server.
@@ -315,7 +310,7 @@ TIP: The recommended practice is to create an `ansible.cfg` file in a directory 
 
 Make sure your inventory file is used by default when executing commands from the `~/ansible-files/` directory:
 
-* On workstation-GUID as ansible create the file `~/ansible-files/ansible.cfg` with the following content:
+* On tower-GUID as ansible create the file `~/ansible-files/ansible.cfg` with the following content:
 ----
 [defaults]
 inventory=/home/ansible/ansible-files/inventory
@@ -327,7 +322,7 @@ inventory=/home/ansible/ansible-files/inventory
 Your Ansible inventory was used without providing the `-i` option. To double-check, run the command again from outside `~/ansible-files/`:
 
 ----
-[ansible@workstation-GUID ~]$ ansible all --list-hosts
+[ansible@tower-GUID ~]$ ansible all --list-hosts
 
  [WARNING]: provided hosts list is empty, only localhost is available. Note that
 the implicit localhost does not match 'all'
@@ -341,9 +336,9 @@ Ansible allows administrators to execute on-demand tasks on managed hosts. These
 
 WARNING: *Don't forget to run the commands from `~/ansible-files/` where your `ansible.cfg` file is located, otherwise it will complain about an empty host list.*
 
-Run the examples on workstation-GUID from the `~/ansible-files/` directory as user ansible.
+Run the examples on tower-GUID from the `~/ansible-files/` directory as user ansible.
 ----
-[ansible@workstation-GUID ansible-files]$ ansible all -m ping
+[ansible@tower-GUID ansible-files]$ ansible all -m ping
 ----
 
 The `-m` option defines which Ansible module to use. Options can be passed to the specified modul using the `-a` option. BTW the `ping` module is not running an ICMP ping but does a simple connection test.
@@ -355,19 +350,19 @@ TIP: Think of a module as a tool which is designed to accomplish a specific task
 Ansible comes with a lot of modules by default. To list all modules run:
 
 ----
-[ansible@workstation-GUID ansible-files]$ ansible-doc -l
+[ansible@tower-GUID ansible-files]$ ansible-doc -l
 ----
 
 TIP: In `ansible-doc` use the `up`/`down` arrows to scroll through the content and leave with `q`.
 
 To find a module try e.g.:
 ----
-[ansible@workstation-GUID ansible-files]$ ansible-doc -l | grep -i user
+[ansible@tower-GUID ansible-files]$ ansible-doc -l | grep -i user
 ----
 
 Get help for a specific module including usage examples:
 ----
-[ansible@workstation-GUID ansible-files]$ ansible-doc user
+[ansible@tower-GUID ansible-files]$ ansible-doc user
 ----
 
 TIP: Mandatory options are marked by a "=" in `ansible-doc`.
@@ -376,7 +371,7 @@ TIP: Mandatory options are marked by a "=" in `ansible-doc`.
 
 Let's try a simple module that just executes a command on a managed host:
 ----
-[ansible@workstation-GUID ansible-files]$ ansible servera.example.com -m command -a 'id'
+[ansible@tower-GUID ansible-files]$ ansible servera.example.com -m command -a 'id'
 
 servera.example.com | SUCCESS | rc=0 >>
 uid=1000(ansible) gid=1000(ansible) groups=1000(ansible),10(wheel) context=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023
@@ -386,22 +381,22 @@ In this case the module is called `command` and the option passed with `-a` is t
 
 Another example: Have a quick look at the kernel versions your hosts are running:
 ----
-[ansible@workstation-GUID ansible-files]$ ansible all -m command -a 'uname -r'
+[ansible@tower-GUID ansible-files]$ ansible all -m command -a 'uname -r'
 ----
 
 Sometimes it's desirable to have the output for a host on one line:
 ----
-[ansible@workstation-GUID ansible-files]$ ansible all -m command -a 'uname -r' -o
+[ansible@tower-GUID ansible-files]$ ansible all -m command -a 'uname -r' -o
 ----
 
-Using the `copy` module, execute an ad hoc command on workstation-GUID to change the contents of the `/etc/motd` file on servera.example.com. *The content is handed to the module through an option in this case*.
+Using the `copy` module, execute an ad hoc command on tower-GUID to change the contents of the `/etc/motd` file on servera.example.com. *The content is handed to the module through an option in this case*.
 
 Run:
 
 WARNING: Expect an error!
 
 ----
-[ansible@workstation-GUID ansible-files]$ ansible servera.example.com -m copy -a 'content="Managed by Ansible\n" dest=/etc/motd'
+[ansible@tower-GUID ansible-files]$ ansible servera.example.com -m copy -a 'content="Managed by Ansible\n" dest=/etc/motd'
 ----
 Output:
 
@@ -423,7 +418,7 @@ TIP: Ansible will connect to the machines using your current user name (ansible 
 
 For us it's okay to connect as ansible because `sudo` is set up. Change the command to use the `-b` parameter and run again:
 ----
-[ansible@workstation-GUID ansible-files]$ ansible servera.example.com -m copy -a 'content="Managed by Ansible\n" dest=/etc/motd' -b
+[ansible@tower-GUID ansible-files]$ ansible servera.example.com -m copy -a 'content="Managed by Ansible\n" dest=/etc/motd' -b
 ----
 Output:
 
@@ -447,7 +442,7 @@ servera.example.com | SUCCESS => {
 
 Check the motd file:
 ----
-[ansible@workstation-GUID ansible-files]$ ansible servera.example.com -m command -a 'cat /etc/motd'
+[ansible@tower-GUID ansible-files]$ ansible servera.example.com -m command -a 'cat /etc/motd'
 
 servera.example.com | SUCCESS | rc=0 >>
 Managed by Ansible
@@ -472,9 +467,9 @@ TIP: Use the copy ad hoc command from above as a template and change the module 
 WARNING: *Solution below!*
 
 ----
-[ansible@workstation-GUID ansible-files]$ ansible-doc -l | grep -i yum
-[ansible@workstation-GUID ansible-files]$ ansible-doc yum
-[ansible@workstation-GUID ansible-files]$ ansible servera.example.com -m yum -a 'name=screen state=latest' -b
+[ansible@tower-GUID ansible-files]$ ansible-doc -l | grep -i yum
+[ansible@tower-GUID ansible-files]$ ansible-doc yum
+[ansible@tower-GUID ansible-files]$ ansible servera.example.com -m yum -a 'name=screen state=latest' -b
 ----
 
 
@@ -521,7 +516,7 @@ This Playbook makes sure the package containing the Apache webserver is installe
 
 TIP: You obviously need to use privilege escalation to install a package or run any other task that requires root permissions. This is done in the Playbook by `become: yes`.
 
-On workstation-GUID as user ansible create the file `~/ansible-files/apache.yml` with the following content:
+On tower-GUID as user ansible create the file `~/ansible-files/apache.yml` with the following content:
 ----
 ---
 - name: Apache server installed
@@ -544,18 +539,18 @@ This shows one of Ansible's strenghts: The Playbook syntax is easy to read and u
 
 Playbooks are executed using the `ansible-playbook` command on the control node. Before you run a new Playbook it's a good idea to check for syntax errors:
 ----
-[ansible@workstation-GUID ansible-files]$ ansible-playbook --syntax-check apache.yml
+[ansible@tower-GUID ansible-files]$ ansible-playbook --syntax-check apache.yml
 ----
 
 Now you should be ready to run your Playbook:
 ----
-[ansible@workstation-GUID ansible-files]$ ansible-playbook apache.yml
+[ansible@tower-GUID ansible-files]$ ansible-playbook apache.yml
 ----
 
 Use SSH to make sure Apache has been installed on servera.example.com.
 
 ----
-[ansible@workstation-GUID ansible-files]$ ssh servera.example.com rpm -qi httpd
+[ansible@tower-GUID ansible-files]$ ssh servera.example.com rpm -qi httpd
 
 Name        : httpd
 Version     : 2.4.6
@@ -565,7 +560,7 @@ Version     : 2.4.6
 Or even better use an Ansible ad hoc command!
 
 ----
-[ansible@workstation-GUID ansible-files]$ ansible servera.example.com -m command -a 'rpm -qi httpd'
+[ansible@tower-GUID ansible-files]$ ansible servera.example.com -m command -a 'rpm -qi httpd'
 ----
 
 Run the Playbook a second time.
@@ -576,7 +571,7 @@ TIP: The different colors, the "ok" and "changed" counters and the "PLAY RECAP" 
 
 The next part of the Playbook makes sure the Apache webserver is enabled and started on servera.example.com.
 
-On workstation-GUID as user ansible edit the file `~/ansible-files/apache.yml` to add a second task using the `service` module. The Playbook should now look like this:
+On tower-GUID as user ansible edit the file `~/ansible-files/apache.yml` to add a second task using the `service` module. The Playbook should now look like this:
 ----
 ---
 - name: Apache server installed
@@ -604,7 +599,7 @@ WARNING: As this is YAML take care of the correct indentation when copy/pasting!
 
 Run your extended Playbook:
 ----
-[ansible@workstation-GUID ansible-files]$ ansible-playbook apache.yml
+[ansible@tower-GUID ansible-files]$ ansible-playbook apache.yml
 ----
 
 * Note some tasks are shown as "ok" in green and one is shown as "changed" in yellow.
@@ -616,7 +611,7 @@ Run your extended Playbook:
 
 Check that the tasks where executed correctly and Apache is accepting connections: Make an HTTP request using Ansible's `uri` module in an ad hoc command from the control node:
 ----
-[ansible@workstation-GUID ansible-files]$ ansible localhost -m uri -a "url=http://servera.example.com/"
+[ansible@tower-GUID ansible-files]$ ansible localhost -m uri -a "url=http://servera.example.com/"
 ----
 
 WARNING: Expect a lot of red lines and a 403 status!
@@ -632,7 +627,7 @@ So why not use Ansible to deploy a simple `index.html` file? Create the file `~/
 
 You already used Ansible's `copy` module to write text supplied on the commandline into a file. Now you'll use the module in your Playbook to actually copy a file:
 
-On workstation-GUID as user ansible edit the file `~/ansible-files/apache.yml` and add a new task utilizing the `copy` module. It should now look like this:
+On tower-GUID as user ansible edit the file `~/ansible-files/apache.yml` and add a new task utilizing the `copy` module. It should now look like this:
 ----
 ---
 - name: Apache server installed
@@ -658,7 +653,7 @@ You are getting used to the Playbook syntax, so what happens? The new task uses 
 
 Run your extended Playbook:
 ----
-[ansible@workstation-GUID ansible-files]$ ansible-playbook apache.yml
+[ansible@tower-GUID ansible-files]$ ansible-playbook apache.yml
 ----
 
 * Have a good look at the output
@@ -716,15 +711,15 @@ The Playbook now pointing to the group "webserver":
 
 Run the Playbook:
 ----
-[ansible@workstation-GUID ansible-files]$ ansible-playbook apache.yml
+[ansible@tower-GUID ansible-files]$ ansible-playbook apache.yml
 ----
 
 And the commands to check if Apache is now running on both servers:
 ----
-[ansible@workstation-GUID ansible-files]$ ansible localhost -m uri -a "url=http://servera.example.com/"
+[ansible@tower-GUID ansible-files]$ ansible localhost -m uri -a "url=http://servera.example.com/"
 ----
 ----
-[ansible@workstation-GUID ansible-files]$ ansible localhost -m uri -a "url=http://serverb.example.com/"
+[ansible@tower-GUID ansible-files]$ ansible localhost -m uri -a "url=http://serverb.example.com/"
 ----
 
 === Ansible Variables
@@ -750,10 +745,10 @@ TIP: Host variables take precedence over group variables (more about precedence 
 
 For understanding and practice let's do a lab. Following up on the theme "Let's build a webserver. Or two. Or even more..." you will change the `index.html` to show the development environment (dev/prod) a server is deployed in.
 
-On workstation-GUID as user ansible create the directories to hold the variable definitions in `~/ansible-files/`:
+On tower-GUID as user ansible create the directories to hold the variable definitions in `~/ansible-files/`:
 
 ----
-[ansible@workstation-GUID ansible-files]$ mkdir host_vars group_vars
+[ansible@tower-GUID ansible-files]$ mkdir host_vars group_vars
 ----
 
 ==== Create the Variable Files
@@ -817,21 +812,21 @@ TIP: Note how the variable "stage" is used in the name of the file to copy.
 
 * Run the Playbook:
 ----
-[ansible@workstation-GUID ansible-files]$ ansible-playbook deploy_index_html.yml
+[ansible@tower-GUID ansible-files]$ ansible-playbook deploy_index_html.yml
 ----
 
 ==== Test the Result
 
 The Playbook should copy different files as index.html to the hosts, use `curl` to test it:
 ----
-[ansible@workstation-GUID ansible-files]$ curl http://servera.example.com
+[ansible@tower-GUID ansible-files]$ curl http://servera.example.com
 
 <body>
 <h1>This is a development webserver, have fun!</h1>
 </body>
 ----
 ----
-[ansible@workstation-GUID ansible-files]$ curl http://serverb.example.com
+[ansible@tower-GUID ansible-files]$ curl http://serverb.example.com
 
 <body>
 <h1>This is a production webserver, take care!</h1>
@@ -844,22 +839,22 @@ TIP: If by now you think: There has to be a smarter way to change content in fil
 
 Ansible facts are variables that are automatically discovered by Ansible from a managed host. Facts are pulled by the `setup` module and contain useful information stored into variables that administrators can reuse.
 
-To get an idea what facts Ansible collects by default, on workstation-GUID as user ansible from the `~/ansible-files/` directory run:
+To get an idea what facts Ansible collects by default, on tower-GUID as user ansible from the `~/ansible-files/` directory run:
 
 ----
-[ansible@workstation-GUID ansible-files]$ ansible servera.example.com -m setup
+[ansible@tower-GUID ansible-files]$ ansible servera.example.com -m setup
 ----
 
 TIP: You still remember why you have to run ansible from this directory?
 
 This might be a bit too much, you can use filters to limit the output to certain facts, the expression is shell-style wildcard:
 ----
-[ansible@workstation-GUID ansible-files]$ ansible servera.example.com -m setup -a 'filter=ansible_eth0'
+[ansible@tower-GUID ansible-files]$ ansible servera.example.com -m setup -a 'filter=ansible_eth0'
 ----
 
 Or what about only looking for memory related facts:
 ----
-[ansible@workstation-GUID ansible-files]$ ansible all -m setup -a 'filter=ansible_*_mb'
+[ansible@tower-GUID ansible-files]$ ansible all -m setup -a 'filter=ansible_*_mb'
 ----
 
 ==== Challenge Lab: Facts
@@ -871,10 +866,10 @@ TIP: Use grep to find the fact, then apply a filter to only print this fact.
 WARNING: *Solution below!*
 
 ----
-[ansible@workstation-GUID ansible-files]$ ansible servera.example.com -m setup | grep distribution
+[ansible@tower-GUID ansible-files]$ ansible servera.example.com -m setup | grep distribution
 ----
 ----
-[ansible@workstation-GUID ansible-files]$ ansible all -m setup -a 'filter=ansible_distribution' -o
+[ansible@tower-GUID ansible-files]$ ansible all -m setup -a 'filter=ansible_distribution' -o
 ----
 
 ==== Using Facts in Playbooks
@@ -894,7 +889,7 @@ TIP: The "debug" module is handy for e.g. debugging variables or expressions.
 
 Execute it to see how the facts are printed:
 ----
-[ansible@workstation-GUID ansible-files]$ ansible-playbook facts.yml
+[ansible@tower-GUID ansible-files]$ ansible-playbook facts.yml
 
 PLAY [all] *********************************************************************
 
@@ -936,7 +931,7 @@ For more on this, please refer to the documentation: http://jinja.pocoo.org/docs
 
 As an example you would like to install an FTP server, but only on hosts that are in the "ftpserver" inventory group.
 
-As user ansible create this Playbook on workstation-GUID as `ftpserver.yml` in the `~/ansible-files/` directory, run it and examine the output:
+As user ansible create this Playbook on tower-GUID as `ftpserver.yml` in the `~/ansible-files/` directory, run it and examine the output:
 ----
 ---
 - name: Install vsftpd on ftpservers
@@ -967,7 +962,7 @@ Admittedly using an inventory group as a condition is the most basic case you wo
 
 You might have noticed servera and serverb have different amounts of RAM. If not have another look at the facts:
 ----
-[ansible@workstation-GUID ansible-files]$ ansible all -m setup -a 'filter=ansible_*_mb'
+[ansible@tower-GUID ansible-files]$ ansible all -m setup -a 'filter=ansible_*_mb'
 ----
 
 Write a Playbook `mariadb.yml` that installs MariaDB but only if the host has more then, say, 3000 MB of RAM.
@@ -1019,9 +1014,9 @@ As a an example, let's write a Playbook that:
 * manages Apache's configuration file `httpd.conf` on all hosts in the `webserver` group
 * restarts Apache when the file has changed
 
-First we need the file Ansible will deploy, let's just take the one from workstation-GUID:
+First we need the file Ansible will deploy, let's just take the one from tower-GUID:
 ----
-[ansible@workstation-GUID ansible-files]$ scp servera.example.com:/etc/httpd/conf/httpd.conf .
+[ansible@tower-GUID ansible-files]$ scp servera.example.com:/etc/httpd/conf/httpd.conf .
 ----
 
 Then create the Playbook `httpd_conf.yml`:
@@ -1063,12 +1058,12 @@ Listen 8080
 
 Apache should now listen on port 8080. Easy enough to verify:
 ----
-[ansible@workstation-GUID ansible-files]$ curl http://serverb.example.com
+[ansible@tower-GUID ansible-files]$ curl http://serverb.example.com
 
 curl: (7) Failed connect to serverb.example.com:80; Connection refused
 ----
 ----
-[ansible@workstation-GUID ansible-files]$ curl http://serverb.example.com:8080
+[ansible@tower-GUID ansible-files]$ curl http://serverb.example.com:8080
 
 <body>
 <h1>This is a production webserver, take care!</h1>
@@ -1088,7 +1083,7 @@ When a template for a file has been created, it can be deployed to the managed h
 
 As an example of using templates you will change the motd file to contain host-specific data.
 
-In the `~/ansible-files/` directory on workstation-GUID as user ansible create the template file `motd-facts.j2`:
+In the `~/ansible-files/` directory on tower-GUID as user ansible create the template file `motd-facts.j2`:
 
 ----
 Welcome to {{ ansible_hostname }}.
@@ -1096,7 +1091,7 @@ Welcome to {{ ansible_hostname }}.
 deployed on {{ ansible_architecture }} architecture.
 ----
 
-In the `~/ansible-files/` directory on workstation-GUID as user ansible create the Playbook `motd-facts.yml`:
+In the `~/ansible-files/` directory on tower-GUID as user ansible create the Playbook `motd-facts.yml`:
 
 ----
 ---
@@ -1137,7 +1132,7 @@ WARNING: *Solution below!*
 
 * Find the fact:
 ----
-[ansible@workstation-GUID ansible-files]$ ansible servera.example.com -m setup | grep -i fqdn
+[ansible@tower-GUID ansible-files]$ ansible servera.example.com -m setup | grep -i fqdn
 ----
 
 * Use the `ansible_fqdn` fact in the template `motd-facts.j2`.
@@ -1164,12 +1159,12 @@ WARNING: *Solution below!*
 
 Your commands could look like these:
 ----
-[ansible@workstation-GUID ansible-files]$ ansible-doc -l | grep -i user
-[ansible@workstation-GUID ansible-files]$ ansible-doc user
-[ansible@workstation-GUID ansible-files]$ ansible all -m user -a "name=testuser comment='Test D User'" -b
-[ansible@workstation-GUID ansible-files]$ ansible all -m command -a " id testuser" -b
-[ansible@workstation-GUID ansible-files]$ ansible all -m user -a "name=testuser state=absent remove=yes" -b
-[ansible@workstation-GUID ansible-files]$ ansible all -m command -a " id testuser" -b
+[ansible@tower-GUID ansible-files]$ ansible-doc -l | grep -i user
+[ansible@tower-GUID ansible-files]$ ansible-doc user
+[ansible@tower-GUID ansible-files]$ ansible all -m user -a "name=testuser comment='Test D User'" -b
+[ansible@tower-GUID ansible-files]$ ansible all -m command -a " id testuser" -b
+[ansible@tower-GUID ansible-files]$ ansible all -m user -a "name=testuser state=absent remove=yes" -b
+[ansible@tower-GUID ansible-files]$ ansible all -m command -a " id testuser" -b
 ----
 
 ==== Bonus Lab: Templates and Variables
@@ -1231,16 +1226,16 @@ Listen {{ listen_port }}
 
 ===== Run and test:
 ----
-[ansible@workstation-GUID ansible-files]$ ansible-playbook apache_config_tpl.yml
+[ansible@tower-GUID ansible-files]$ ansible-playbook apache_config_tpl.yml
 ----
 ----
-[ansible@workstation-GUID ansible-files]$ curl http://serverb.example.com:80
+[ansible@tower-GUID ansible-files]$ curl http://serverb.example.com:80
 <body>
 <h1>This is a production webserver, take care!</h1>
 </body>
 ----
 ----
-[ansible@workstation-GUID ansible-files]$ curl http://servera.example.com:8080
+[ansible@tower-GUID ansible-files]$ curl http://servera.example.com:8080
 <body>
 <h1>This is a development webserver, have fun!</h1>
 </body>
@@ -1286,17 +1281,19 @@ WARNING: *Solution below!*
 * Run it and check the SSH login as root:
 
 ----
-[ansible@workstation-GUID ansible-files]$ ansible-playbook no_sshd_root.yml
+[ansible@tower-GUID ansible-files]$ ansible-playbook no_sshd_root.yml
 ----
 
 ----
-[ansible@workstation-GUID ansible-files]$ ssh root@servera.example.com
+[ansible@tower-GUID ansible-files]$ ssh root@servera.example.com
 root@servera.example.com's password:
 Permission denied, please try again.
 ----
 
+////
 == SAP HANA on RHEL 7 with Ansible
 
+////
 
 ### Provision the HANA Lab environment
 
@@ -1318,12 +1315,16 @@ You will have access to the following hosts:
 |===
 |Role|Hostname Ext|Hostname Int|Internal IP
 
-|Jump Host & Ansible Control Host|workstation-<GUID>.rhpds.opentlc.com|workstation.example.com |192.168.0.10
+|Jump Host & Ansible Control Host|tower-<GUID>.rhpds.opentlc.com|tower.example.com |192.168.0.10
 |Hana Server||hana1.example.com|192.168.0.100
 
 |===
 
 WARNING: You will be able to SSH into the control host, from here you can SSH into the other hosts and run the ansible playbooks.
+
+////
+
+We will use HANA Express for the labs as RedHat is not allowed to provide SAP software for training purpose. So you have to register and download your own HANA Express version.
 
 ### Register for download Hana Express
 
@@ -1348,64 +1349,42 @@ image::hana01.png[]
 
 image::hana02.png[]
 
-* Copy the Installer to your workstation, e.g. from Linux or Mac:
+* Copy the Installer to tower-GUID, e.g. from Linux or Mac:
 
-   $ scp HXEDownloadManager.jar your-sso-login@workstaion-GUID.rhpds.opentlc.com:/tmp/HXEDownloadManager.jar
+   $ scp HXEDownloadManager.jar your-sso-login@tower-GUID.rhpds.opentlc.com:/tmp/HXEDownloadManager.jar
 
-TIP: You need to make sure that either /tmp/HXEDownloadManager.jar  or /tmp/hxe.tgz exist before continue with this script
+* Login to tower and download HANA expressed to /export
 
-=== Install Ansible on the control node and prepare HANA installer
+  $ ssh your-sso-login@tower-GUID
+  $ sudo -i
+  [root@tower ~]# cd /tmp
+  [root@tower tmp]# java -jar HXEDownloadManager.jar -d /export linuxx86_64 installer hxe.tgz
+  Connecting to download server...
 
-1. Connect to the control node (workstation):
+  SAP HANA, express edition version: 2.00.030.00.20180403.2
 
-   # ssh your-sso-login@workstation-GUID.rhpds.opentlc.com
+* Now that you have downloaded HANA Express, unpack hxe.tgz in /export
 
-2. Become the `root` user:
+  [root@tower tmp]# cd /export
+  [root@tower export]# tar xzvf hxe.tgz
 
-   # sudo -i
+* Your directory should now look like this
 
-3.  Run a script that installs ansible from EPEL and downloads and unpacks HANA express on hana1.example.com (this takes 5 - 10 minutes)
+  [root@tower export]# ls -1F
+  HANA_EXPRESS_20/
+  setup_hxe.sh*
 
-    # curl https://people.redhat.com/mkoch/training/scripts/setup_ansible_hana_env.sh | bash
-
-4. Check that Ansible is installed and usable:
-
-  # ansible --version
-  ansible 2.5.2
-    config file = /etc/ansible/ansible.cfg
-    configured module search path = [u'/root/.ansible/plugins/modules', u'/usr/share/ansible/plugins/modules']
-    ansible python module location = /usr/lib/python2.7/site-packages/ansible
-    executable location = /bin/ansible
-    python version = 2.7.5 (default, Oct 11 2015, 17:47:16) [GCC 4.8.3 20140911 (Red Hat 4.8.3-9)]
-
-WARNING: The command to download HANA is already executed in the script. The following is informational only!
-
-NOTE: The script calls the installer with these paramters to download HANA express unattended:
-q
-```
-[mkoch-redhat.com@workstation-17ca ~]$  java -jar HXEDownloadManager.jar -d . linuxx86_64 installer hxe.tgz
-Connecting to download server...
-
-SAP HANA, express edition version: 2.00.030.00.20180403.2
-
-WARNING: The package(s) you chose to download require a minimum of 8 GB of memory to install.  You only have 1 GB on this system.
-Downloading "Server only installer"...
-hxe.tgz : 100%
-Concatenate download files to ./hxe.tgz...
-./hxe.tgz created.
-Verify ./hxe.tgz file checksum...
-./hxe.tgz file checksum is OK.
-[mkoch-redhat.com@workstation-17ca ~]$
-```
 
 === Check the Prerequisites
 
 NOTE: Ansible is keeping configuration management simple. Ansible requires no database or running daemons and can run easily on a laptop. On the managed hosts it needs no running agent.
 
-Verify that the managed hosts accept password-less connections with key authentication from the workstation-GUID node as user ansible, e.g.:
+For the manual installation we use the User ansible, because you would not run this stuff in a production environment as user ansible.
+
+Verify that the managed hosts accept password-less connections with key authentication from the tower-GUID node as user ansible, e.g.:
 ----
-[root@workstation-GUID ~]# su - ansible
-[ansible@workstation-GUID ~]$ ssh hana1.example.com
+[root@-GUID ~]# su - ansible
+[ansible@tower-GUID ~]$ ssh hana1.example.com
 [ansible@hana1 ~]$ exit
 ----
 
@@ -1413,16 +1392,17 @@ To allow user ansible to execute commands on hana1.example.com as root `sudo` ne
 
 Test that the configuration allows ansible to run commands using `sudo` on hana1.example.com without a password, e.g.:
 ----
-[ansible@workstation-GUID ~]$ ssh hana1.example.com
-[ansible@servera ~]$ sudo cat /etc/shadow
-[ansible@servera ~]$ exit
+[ansible@tower-GUID ~]$ ssh hana1.example.com
+[ansible@hana1 ~]$ sudo cat /etc/shadow
+[ansible@hana1 ~]$ exit
 ----
 
 NOTE: *In all subsequent exercises you should work as the ansible user on the control node if not explicitly told differently.*
 
+
 === Setup the ansible environment
 
-In the previous training you have learned how to create basic playbooks, setup an inventory file and start.
+In the ansible foundation training you have learned how to create basic playbooks, setup an inventory file and start.
 
 Test your setup with an ad-hoc command
 
@@ -1436,7 +1416,7 @@ WARNING: *Solution below*
 
    $ echo "hana1.example.com" > ~ansible/ansible-files/inventory
 
-3. Make sure your inventory file is used by default when executing commands from the `~/ansible-files/` directory. On workstation-GUID as ansible create the file `~/ansible-files/ansible.cfg` with the following content:
+3. Make sure your inventory file is used by default when executing commands from the `~/ansible-files/` directory. On tower-GUID as ansible create the file `~/ansible-files/ansible.cfg` with the following content:
 
     [defaults]
     inventory=/home/ansible/ansible-files/inventory
@@ -1448,7 +1428,7 @@ WARNING: *Solution below*
 
 5. Test with an ad-hoc command that the ansible connection is working:
 ----
-[ansible@workstation-GUID ~]$ ansible -m ping hana1.example.com
+[ansible@tower-GUID ~]$ ansible -m ping hana1.example.com
 hana1.example.com | SUCCESS => {
     "changed": false,
     "ping": "pong"
@@ -1476,13 +1456,11 @@ These and some other userful  useful roles can be found here: https://galaxy.ans
 
 ==== Install SAP HANA using these Roles
 
-Install the above roles on workstation as user ansible. Get familiar with these roles. e.g. read the documentation of each of the above role and browse the roles itself
+The above roles are globally installed at /etc/ansible roles already. Get familiar with these roles. e.g. read the documentation of each of the above role and browse the roles itself
 
 -----
 
-[ansible@workstation-GUID ~]$ ansible-galaxy install mk-ansible-roles.saphana-deploy linux-system-roles.timesync mk-ansible-roles.subscribe-rhn
-
-[ansible@workstation-GUID ~]$ ansible-galaxy list
+[ansible@tower-GUID ~]$ ansible-galaxy list
 - mk-ansible-roles.saphana-preconfigure, master
 - mk-ansible-roles.saphana-deploy, master
 - linux-system-roles.timesync, 0.1
@@ -1490,16 +1468,14 @@ Install the above roles on workstation as user ansible. Get familiar with these 
 
 -----
 
-NOTE: the role saphana-deploy is dependant on saphana-preconfigured. So it is installed automatically
-
 NOTE: Global roles can be installed (as root) to `/usr/share/ansible/roles` using the -p option, per default roles are installed to `${HOME}/.ansible/roles`. You need to set your roles_path in `ansible.cfg` appropriately
 
-Now go ahead an read the Readme of saphana-preconfigure role either on the web (easier to read) or on the commandline:
+Now go ahead and read the Readme of saphana-preconfigure role either on the web (easier to read) or on the commandline:
 
 -----
-[ansible@workstation-GUID ~]$ ansible-galaxy info mk-ansible-roles.saphana-preconfigure
-[ansible@workstation-GUID ~]$ ansible-galaxy info mk-ansible-roles.saphana-deploy
-[ansible@workstation-GUID ~]$ ansible-galaxy info mk-ansible-roles.subscribe-rhn
+[ansible@tower-GUID ~]$ ansible-galaxy info mk-ansible-roles.saphana-preconfigure
+[ansible@tower-GUID ~]$ ansible-galaxy info mk-ansible-roles.saphana-deploy
+[ansible@tower-GUID ~]$ ansible-galaxy info mk-ansible-roles.subscribe-rhn
 -----
 
 
@@ -1509,8 +1485,14 @@ Now write playbook to prepare `hana1.example.com` for HANA installation. The fol
 
 * The  lab environment has a version of Red Hat Enterprise Linux 7.2 base server already installed, but the channels for HANA installation are not correct. Use the `mk-ansible-roles.subscribe-rhn` to set the correct repositories. For this use the following variables:
 
-  # Pins the release to 7.2
-  reg_osrelease: 7.2
+  # Use the Satellie server with activation key:
+  satellite_server: satellite.example.com
+  reg_activation_key: sap-hana
+  reg_organization_id: RHPDS_Demo
+  reg_server_insecure: yes
+
+  # Pins the release to 7.4
+  reg_osrelease: 7.4
 
   # remove all previously set repositories
   repo_reset: true
@@ -1522,14 +1504,28 @@ Now write playbook to prepare `hana1.example.com` for HANA installation. The fol
 
 NOTE: you will find more details on the Update Services for SAP in our https://access.redhat.com/solutions/3075991[Knowledbase]
 
-* In the course we can ignore network setup and NTP server setup. These could be done with `linux-system-roles.network` and `linux-system-roles.network`. See https://access.redhat.com/articles/3050101[RHEL System Roles] for more info.
+* In the course we can ignore network setup  setup. These could be done with `linux-system-roles.network`. See https://access.redhat.com/articles/3050101[RHEL System Roles] for more info.
+
+* Use the `linux-system-roles.timeserver` to configure NTP usinf the following timeserver variables:
+
+  ntp_servers:
+    - hostname: 0.rhel.pool.ntp.org
+      iburst: yes
+    - hostname: 1.rhel.pool.ntp.org
+      iburst: yes
+    - hostname: 2.rhel.pool.ntp.org
+      iburst: yes
+    - hostname: 3.rhel.pool.ntp.org
+      iburst: yes
 
 * To do all preconfiguration steps for SAP HANA which are described in the SAP Note 2292690 use `mk-ansible-roles.saphana-preconfigure`
 
-** SAP Installation media has already been unpacked to `/install`. Use the following to define the install directory
+** SAP Installation media is provided on an NFS share on the tower server and should be mounted to /install on the hanaservers.
 
-    installroot: /install
-    hana_installdir: /install/HANA_EXPRESS_20
+    install_nfs: "tower.example.com:/export"
+    installroot: /install/hxe
+    installversion: "HANA_EXPRESS_20"
+    hana_installdir: "{{ installroot + '/' + installversion }}"
 
 ** For the preparation of SAP users and hostagent use the following variables.
 
@@ -1554,6 +1550,7 @@ TIP: This information can also go to an appropriate group_vars file, because it 
 
   instances:
     hxe:
+      hdblcm_params: "--ignore=check_min_mem,check_platform"
       id_user_sidadm: "30210"
       pw_user_sidadm: "Adm12356"
       hana_pw_system_user_clear: "System123"
@@ -1567,7 +1564,7 @@ TIP: This information can also go to an appropriate group_vars file, because it 
       hana_system_usage: custom
 
 NOTE: The backend you are using in this course is a test environment that is not officially supported by SAP, as such depending on the HANA installer version
-the installation prerequisite checks fail. To be safe add the following line to your instance: `hdblcm_params: "--ignore=check_platform"``
+the installation prerequisite checks fail. To be safe add the following line to your instance: `hdblcm_params: "--ignore=check_platform"`,  add the parameter `check_min_mem` if your installation is below 32GB. With this HANA express can be installed on 16GB servers.
 
 NOTE:   In case of deploying a HANA scale-out cluster only one server must have `deployment_instance: true`, all other need this variable to be unset. The hosts of the scale-out cluster need to be listed in hana_addhosts
 
@@ -1606,17 +1603,41 @@ You need to create the following files:
   become: yes
 
   vars:
-              # Repositories setup
-              reg_osrelease: 7.2
+              #####################################################
+              # Default Subscription Information for HANA Servers
+              # used in: mk-ansible-roles.rhn-subscribe
+
+              satellite_server: satellite.example.com
+              reg_activation_key: sap-hana
+              reg_organization_id: RHPDS_Demo
+              reg_server_insecure: yes
+
+              reg_osrelease: 7.4
               repo_reset: true
               repositories:
                  - rhel-7-server-e4s-rpms
                  - rhel-sap-hana-for-rhel-7-server-e4s-rpms
 
+              ####################################################
+              # Default Timeserver settings
+              # used in: rhel-system-roles.timeserver
+
+              ntp_servers:
+                      - hostname: 0.rhel.pool.ntp.org
+                        iburst: yes
+                      - hostname: 1.rhel.pool.ntp.org
+                        iburst: yes
+                      - hostname: 2.rhel.pool.ntp.org
+                        iburst: yes
+                      - hostname: 3.rhel.pool.ntp.org
+                        iburst: yes
+
               # SAP Precoonfigure role
               # SAP-Media Check
-              installroot: /install
-              hana_installdir: /install/HANA_EXPRESS_20
+              install_nfs: "tower.example.com:/export"
+              installroot: /install/hxe
+              installversion: "HANA_EXPRESS_20"
+              hana_installdir: "{{ installroot + '/' + installversion }}"
 
               hana_pw_hostagent_ssl: "MyS3cret!"
               id_user_sapadm: "30200"
@@ -1634,11 +1655,32 @@ You need to create the following files:
 -----
 
 ---
+### Disk Configuration
+disks:
+        /dev/vdb: vg00
+logvols:
+        hana_shared:
+                size: 32G
+                vol: vg00
+                mountpoint: /hana/shared
+        hana_data:
+                size: 32G
+                vol: vg00
+                mountpoint: /hana/data
+        hana_logs:
+                size: 16G
+                vol: vg00
+                mountpoint: /hana/logs
+        usr_sap:
+                size: 50G
+                vol: vg00
+                mountpoint: /usr/sap
+
 hostname: "{{ ansible_hostname }}"
 deployment_instance: true
 
 instances:
-  hxe:
+  inst01:
     id_user_sidadm: "30210"
     pw_user_sidadm: "Adm12356"
     hana_pw_system_user_clear: "System123"
@@ -1657,19 +1699,23 @@ instances:
 Now kick off the installation as user ansible on workstion-GUID:
 
 -----
-[ansible@workstation-GUID ~]$ ansible-playbook install-hana.yml
+[ansible@tower-GUID ~]$ ansible-playbook install-hana.yml
 -----
 
 TIP: run with -vvv to increase debuglevel to get mor information whats happening
 
 You finished your Lab deploying SAP HANA fully automated. You now know the basics and should be able to integrate this with Satellite, Ansible Tower and even CloudForms. To learn about thes tools join us in one of the upcoming management classes.
+It might be useful to split playbooks and keep variables separately. An example of this is used in tower and can be found in the directory: `~awx/projects/rhdemos`
+
+In this directory the variables are kept in `group_vars/hana` and in `host_vars/hana1.example.com`
 
 === Bonus Labs
 
 ==== Install and configure Insights
 
-If you have access to your own subscription run `subscription-manager unregister` and register the server against your subscription.
-Then follow the instructions of https://access.redhat.com/products/red-hat-insights#getstarted[ the getting started guide^]
+WARNING: UNTESTED with Satellite Server
+
+Follow the instructions of https://access.redhat.com/products/red-hat-insights#getstarted[ the getting started guide^]
 
 WARNING: *Solution Below*
 
@@ -1706,7 +1752,7 @@ WARNING: *Solution Below*
 * Make sure you have your release set to the current minor release:
 
   [root@hana1-GUID ~]# subscription-manager release
-  Release: 7.2
+  Release: 7.4
 
 * update the system
 
@@ -1722,11 +1768,15 @@ WARNING: *Solution Below*
 
 * login and start HANA again (in case it is not started automatically)
 
-  [root@workstation-GUID ~]# ssh hana1.example.com
+  [root@tower-GUID ~]# ssh hana1.example.com
   [root@hana1-GUID ~]# su - hxeadm
   hxeadm@hana1-GUID.rhpds:/usr/sap/HXE/HDB90> HDB start
 
+////
+THIS MODULE WILL BE POSIBLE WHEN 7.6 validated
+
 2. Update the system to the latest patches in a newer RHEL minor release:
+
 * Check available releases:
 
   [root@hana1-GUID ~]# subscription-manager release --list
@@ -1739,14 +1789,16 @@ WARNING: *Solution Below*
   7.3
   7.4
   7.5
+  7.6
   7Server
 
-* Set the desired release 7.4
+* Set the desired release 7.6
 
-  [root@hana1-GUID ~]# subscription-manager release --set 7.4
-  Release set to: 7.4
+  [root@hana1-GUID ~]# subscription-manager release --set 7.6
+  Release set to: 7.6
 
 * update the systems and reboot as described in the previous steps
+////
 
 Do you really want to do this manually? If not, here is a playbook that covers both upgrade scenarios. If you change `reg_osrelease`, an upgrade to another RHEL release will be performed.
 
@@ -1757,7 +1809,7 @@ Do you really want to do this manually? If not, here is a playbook that covers b
 
   vars:
               # Repositories setup
-              reg_osrelease: 7.2
+              reg_osrelease: 7.4
               repo_reset: false
               repositories:
                  - rhel-7-server-e4s-rpms
@@ -1766,7 +1818,7 @@ Do you really want to do this manually? If not, here is a playbook that covers b
               sid: hxe
 
   roles:
-              ## We can use this role to change  repsoitories, if we need to and to switch the minor relase
+              ## We can use this role to change  repsoitories, if we need to and to switch the minor relase from eus to e4s or similar.
               - { role: mk-ansible-roles.subscribe-rhn }
 
   tasks:
@@ -1783,7 +1835,6 @@ Do you really want to do this manually? If not, here is a playbook that covers b
               - name: restart machine
                 shell: sleep 2 && shutdown -r now "Ansible updates triggered"
                 async: 1
-                poll: 0
                 become: true
                 ignore_errors: true
 
@@ -1803,6 +1854,22 @@ You could also think about splitting this playbook into separate roles, that can
 * Stop HANA instances
 * Start HANA instances
 * Update Server. In this role you could implement reboot as a handler, so that a system is only rebooted if a new kernel or other patch which requires a reboot is installed
+
+== Deploying HANA with Tower
+You have deployed `hana1.example.com` from the commandline, now look how easy this is with tower.
+
+We use the prepared playbooks in `~awx/projects/rhdemo`
+
+Login to tower with know credentials
+get familiar with
+
+ * project RH demo
+ * the inventory RH demo
+ * the job Templates
+
+Run the workflow template enter HANA SID and HANA instance number and you are done.
+
+NOTE: The inventory name in Tower does not match hana. To get the group variables used, you need to rename the file or the inventory appropriately or you copy the content of the file `group_vars/hana` in the variable definition in tower. As a good practise you can copy only the variables to tower that can be different between installations and keep the variables that are global to your site in the files in the SCM system as default values.
 
 == The End
 

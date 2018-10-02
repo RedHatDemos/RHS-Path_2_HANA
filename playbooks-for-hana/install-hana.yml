@@ -1,28 +1,16 @@
 ---
 - name: Install SAP HANA
-  hosts: hana1.example.com
+  hosts: hana
   become: yes
 
-  vars:
-              # Repositories setup
-              reg_osrelease: 7.2
-              repo_reset: true
-              repositories:
-                 - rhel-7-server-eus-rpms
-                 - rhel-sap-hana-for-rhel-7-server-eus-rpms
-
-              # SAP Precoonfigure role
-              # SAP-Media Check
-              installroot: /install
-              hana_installdir: /install/HANA_EXPRESS_20
-
-              hana_pw_hostagent_ssl: "MyS3cret!"
-              id_user_sapadm: "30200"
-              id_group_shm: "30220"
-              id_group_sapsys: "30200"
-              pw_user_sapadm_clear: "MyS3cret!"
+  # variables are all defined in group_vars/hana and host_vars
+  # so run this playbook with
+  # ansible-playbook -l hana1.example.com -vv install-hana.yml
 
   roles:
-              - { role: mk-ansible-roles.subscribe-rhn }
-              - { role: mk-ansible-roles.saphana-preconfigure }
-              - { role: mk-ansible-roles.saphana-deploy }
+          - mk-ansible-roles.subscribe-rhn
+          - linux-system-roles.timesync
+          - mk-ansible-roles.disk-init
+          - mk-ansible-roles.saphana-preconfigure
+          - mk-ansible-roles.saphana-deploy
+
