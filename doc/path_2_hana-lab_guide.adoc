@@ -1483,7 +1483,7 @@ Now go ahead and read the Readme of saphana-preconfigure role either on the web 
 
 Now write playbook to prepare `hana1.example.com` for HANA installation. The following preconditions are:
 
-* The  lab environment has a version of Red Hat Enterprise Linux 7.2 base server already installed, but the channels for HANA installation are not correct. Use the `mk-ansible-roles.subscribe-rhn` to set the correct repositories. For this use the following variables:
+* The  lab environment has a version of Red Hat Enterprise Linux 7.4 base server already installed, but the channels for HANA installation are not correct. Use the `mk-ansible-roles.subscribe-rhn` to set the correct repositories. For this use the following variables:
 
   # Use the Satellie server with activation key:
   satellite_server: satellite.example.com
