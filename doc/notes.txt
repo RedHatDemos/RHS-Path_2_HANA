@@ -1,0 +1,4 @@
+Quick run:
+[root@tower rhdemo]# pwd
+/var/lib/awx/projects/rhdemo
+ansible-playbook -i inventory -l hana0.example.com system_setup.yml
