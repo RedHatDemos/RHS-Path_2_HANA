@@ -1,0 +1,42 @@
+Ansible on SAP Training Guide
+=============================
+:scrollbar:
+:data-uri:
+:toc: left
+:numbered:
+:icons: font
+:imagesdir: ./images
+:docinfo:
+
+## Presentations
+
+Get the presentations  link:presentations[here].
+
+## Overview
+After this lab you will have a basic understanding of how ansible works and how to use and modify the predefined ansible roles for installing SAP HANA.
+This Lab uses the infrastructure of the Red Hat Partner Demo System.
+
+The lab is preprovisoned. So please go to the following https://is.gd/rkQzUP[Webpage]
+Select the following values:
+
+  * Lab Code: P2H - SAP HANA Lab
+  * Lab Key: _Given in your session_
+  * Click Next
+
+You will get your GUID and  further access information to the lab
+
+include::01-lab-overview.adoc[]
+
+## Ansible foundation
+
+include::11-ansible-engine-short.adoc[]
+
+## SAP HANA on RHEL 7 with Ansible
+
+include::21-ansible-hana-labsetup.adoc[]
+include::22-ansible-hana-lab.adoc[]
+
+
+== The End
+
+Congratulations, you finished your labs! We hope you enjoyed your first steps using Ansible as much as we enjoyed creating the labs.

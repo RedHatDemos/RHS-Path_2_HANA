@@ -1,0 +1,6 @@
+# Playbook installing Insights
+---
+- hosts: hana1.example.com
+  become: yes
+  roles:
+  - { role: redhataccess.redhat-access-insights-client, when: ansible_os_family == 'RedHat' }

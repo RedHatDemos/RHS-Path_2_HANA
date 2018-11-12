@@ -1,0 +1,106 @@
+
+### Register for download Hana Express
+
+To deploy HANA you need to use your own license of SAP. The fastest and easieast way of getting access is to SAP HANA is to download SAP HANA Express.
+
+HANA Express is a reduced Version of SAP HANA and requires less resources than HANA Platform Edition. It lacks at least the following features:
+
+- Smart Data Integration (SDI)
+- Smart Data Streaming
+- Sytem Replication (HSR)
+- Dynamic tiering
+
+For a full list see http://news.sap.com/germany/files/2017/01/SAP-HANA-Express-Edition-FAQ-extern.pdf[the HANA Express FAQ]
+
+For this quickstart guide you need to download the Binary installer method as described in detail on this page: https://www.sap.com/developer/tutorials/hxe-ua-installing-binary.html
+
+As the SAP tutorial only describes the graphical interface which is not feasible for the training server in the cloud, you need to do the following
+
+1. Register for Hana Express at https://www.sap.com/sap-hana-express
++
+image::hana01.png[]
+
+2. Download the platform independant installer (HXEDownloadManager.jar)
++
+image::hana02.png[]
+
+3. Copy the Installer to your workstation, e.g. from Linux or Mac:
++
+----
+$ scp HXEDownloadManager.jar root@tower-e5ba.rhpds.opentlc.com:/export
+HXEDownloadManager.jar                             100%  561KB 971.1KB/s   00:00
+----
++
+If you use mobaXterm on Windows just login to tower and drag the jar file to the dialog box on the left or use winscp to upload the files
+
+4. Login to the tower server and switch to /export
++
+----
+$ ssh root@tower-GUID.rhpds.opentlc.com
+[root@tower ~]# cd /export
+[root@tower export]# ls
+HXEDownloadManager.jar
+----
+5. Download Hana express
++
+----
+[root@tower export]# java -jar HXEDownloadManager.jar -d . linuxx86_64 installer hxe.tgz
+Connecting to download server...
+
+SAP HANA, express edition version: 2.00.033.00.20180925.2
+
+WARNING: The package(s) you chose to download require a minimum of 8 GB of memory to install.  You only have 3 GB on this system.
+Downloading "Server only installer"...
+hxe.tgz : 100%
+Concatenate download files to ./hxe.tgz...
+./hxe.tgz created.
+Verify ./hxe.tgz file checksum...
+./hxe.tgz file checksum is OK.
+----
+
+6. unpack HANA Express
++
+----
+[root@tower export]# tar xzvf hxe.tgz
+setup_hxe.sh
+HANA_EXPRESS_20/change_key.sh
+HANA_EXPRESS_20/hxe_gc.sh
+HANA_EXPRESS_20/hxe_optimize.sh
+[...]
+----
+
+=== Update the ansible environment
+
+In the previous part training you have learned how to create basic playbooks, setup an inventory file and start. Update your environment like this:
+
+1. Make sure your inventory file is used by default when executing commands from the `~/ansible-files/` directory.
+On tower-GUID as ansible create the file `~/ansible-files/ansible.cfg` with the following content:
++
+----
+[defaults]
+inventory=/home/ansible/ansible-files/inventory
+----
+2. Create an inventory file with one hana host in this directory
++
+----
+$ rm ~ansible/ansible-files/inventory
+$ echo "[hana]" > ~ansible/ansible-files/inventory
+$ echo "hana1.example.com" >> ~ansible/ansible-files/inventory
+----
+
+3. remove existing files in the subdirectory `group_vars` and `host_vars`
++
+----
+$ rm /home/ansible/ansible-files/group_vars/*
+$ rm /home/ansible/ansible-files/host_vars/*
+----
+
+4. Test with an ad-hoc command that the ansible connection is working:
++
+----
+[ansible@tower-GUID ~]$ ansible -m ping hana1.example.com
+hana1.example.com | SUCCESS => {
+    "changed": false,
+    "ping": "pong"
+}
+----

@@ -1,0 +1,495 @@
+
+=== Install SAP HANA with ansible roles
+==== Find available roles for SAP deployment
+On http://galaxy.ansible.com[Ansible Galaxy] a lot of ready to use roles exist. Red Hat maintaines the linux-system-roles, which are upstream to supported RHEL System Roles.
+
+See the follwoing pages for more details:
+
+   * https://access.redhat.com/articles/3050101[Red Hat Enterprise Linux (RHEL) System Roles]
+   * https://galaxy.ansible.com/linux-system-roles/[Linux System Roles]
+
+Now find the roles that are useful for installing SAP HANA on http://galaxy.ansible.com
+
+Search for "SAP" and you will find the following roles:
+
+ * https://galaxy.ansible.com/mk-ansible-roles/saphana-preconfigure/[saphana-preconfigure]
+ * https://galaxy.ansible.com/mk-ansible-roles/saphana-deploy/[saphana-deploy]
+ * https://galaxy.ansible.com/mk-ansible-roles/saphana-hsr/[saphana-hsr]
+
+These and some other userful  useful roles can be found here: https://galaxy.ansible.com/mk-ansible-roles/[Roles Overview]
+
+==== Install SAP HANA using these Roles
+
+Check and install the above roles on workstation as user ansible. Get familiar with these roles. e.g. read the documentation of each of the above role and browse the roles itself
+
+-----
+[ansible@tower ~]$ ansible-galaxy list
+- linux-system-roles.kdump, (unknown version)
+- linux-system-roles.network, (unknown version)
+- linux-system-roles.postfix, (unknown version)
+- linux-system-roles.selinux, (unknown version)
+- linux-system-roles.timesync, (unknown version)
+- rhel-system-roles.kdump, (unknown version)
+- rhel-system-roles.network, (unknown version)
+- rhel-system-roles.postfix, (unknown version)
+- rhel-system-roles.selinux, (unknown version)
+- rhel-system-roles.timesync, (unknown version)
+- mk-ansible-roles.disk-init, master
+- mk-ansible-roles.saphana-deploy, master
+- mk-ansible-roles.saphana-hsr, master
+- mk-ansible-roles.saphana-preconfigure, master
+- mk-ansible-roles.subscribe-rhn, master
+-----
+
+NOTE: If the roles are not installed yet use  the follwing command to install them: `ansible-galaxy install mk-ansible-roles.saphana-preconfigure mk-ansible-roles.saphana-deploy linux-system-roles.timesync mk-ansible-roles.subscribe-rhn`
+
+NOTE: Global roles can be installed (as root) to `/usr/share/ansible/roles` or `/etc/ansible/roles` using the -p option, per default roles are installed to `${HOME}/.ansible/roles`. You need to set your roles_path in `ansible.cfg` appropriately
+
+Now go ahead an read the Readme of saphana-preconfigure role either on the web (easier to read) or on the commandline:
+
+-----
+[ansible@workstation-GUID ~]$ ansible-galaxy info mk-ansible-roles.saphana-preconfigure
+[ansible@workstation-GUID ~]$ ansible-galaxy info mk-ansible-roles.saphana-deploy
+[ansible@workstation-GUID ~]$ ansible-galaxy info mk-ansible-roles.subscribe-rhn
+-----
+
+===== Information you should use in your playbooks_loops
+
+Now write playbook to prepare `hana1.example.com` for HANA installation. The following preconditions are:
+
+1. The  lab environment has a version of Red Hat Enterprise Linux 7.4 base server already installed, but the channels for HANA installation are not correct. Use the `mk-ansible-roles.subscribe-rhn` to set the correct repositories. For this use the following variables:
+* Satellite subscription
++
+----
+satellite_server: satellite.example.com
+reg_activation_key: sap-hana
+reg_organization_id: RHPDS_Demo
+reg_server_insecure: yes
+----
++
+* Pin the release to RHEL 7.4
++
+----
+reg_osrelease: 7.4
+----
++
+* remove all previously set repositories
++
+----
+repo_reset: true
+----
++
+* subscribe to the following repositories for 4 years update services
++
+----
+repositories:
+              - rhel-sap-hana-for-rhel-7-server-e4s-rpms
+              - rhel-7-server-e4s-rpms
+----
++
+NOTE: you will find more details on the Update Services for SAP in our https://access.redhat.com/solutions/3075991[Knowledbase]
+
+2. use the `linux-system-roles.network` to define your timeserver. Use the following parameters:
++
+----
+ntp_servers:
+        - hostname: 0.rhel.pool.ntp.org
+          iburst: yes
+        - hostname: 1.rhel.pool.ntp.org
+          iburst: yes
+        - hostname: 2.rhel.pool.ntp.org
+          iburst: yes
+        - hostname: 3.rhel.pool.ntp.org
+          iburst: yes
+----
+
+3. Network setup is already done. In your environment you could use `linux-system-roles.network`. See https://access.redhat.com/articles/3050101[RHEL System Roles] for more info.
+
+4. If you login to hana1.example.com you will realize that the disks are not configured. For a quick configuration use the role `mk-ansible-roles.disk-init` with the following parameters:
++
+----
+disks:
+        /dev/vdb: vg00
+logvols:
+        hana_shared:
+                size: 32G
+                vol: vg00
+                mountpoint: /hana/shared
+        hana_data:
+                size: 32G
+                vol: vg00
+                mountpoint: /hana/data
+        hana_logs:
+                size: 16G
+                vol: vg00
+                mountpoint: /hana/logs
+        usr_sap:
+                size: 50G
+                vol: vg00
+                mountpoint: /usr/sap
+----
+
+5. To do all preconfiguration steps for SAP HANA which are described in the SAP Note 2292690 use `mk-ansible-roles.saphana-preconfigure`
++
+* The SAP Installation media is provided on an NFS Server which is mounted automatically during installation by setting the following paramenters:
++
+----
+# SAP-Media Check
+install_nfs: "tower.example.com:/export"
+installroot: /install/hxe
+installversion: "HANA_EXPRESS_20"
+hana_installdir: "{{ installroot + '/' + installversion }}"
+----
++
+* For the preparation of SAP users and hostagent use the following variables.
++
+----
+hana_pw_hostagent_ssl: "Ab01%%bA"
+id_user_sapadm: "30200"
+id_group_shm: "30220"
+id_group_sapsys: "30200"
+pw_user_sapadm_clear: "Adm12356"
+----
+
+6. To install SAP HANA database, use the role `mk-ansible-roles.saphana-deploy`. For this role you need to add the instance specific parameters in the according host_vars file:
++
+* The first parameter to set is the hostname/interfacename of the interface SAP hostagent will use to talk. If you just have one interface use  `"{{ ansible_hostname }}"` which is the default value.
++
+----
+hostname: "{{ ansible_hostname }}"
+----
++
+* The second parameter to set, is whether you want to prepare the installation or execute the installation. Set it to true, if you want to run `hdblcm`
++
+----
+deployment_instance: true
+----
+
+* Now describe your instance. These variables are similar to the unattended install file:
++
+----
+instances:
+  instance01:
+    hdblcm_params: "--ignore=check_min_mem,check_platform"
+    id_user_sidadm: "30210"
+    pw_user_sidadm: "Adm12356"
+    hana_pw_system_user_clear: "System123"
+    hana_components: "client,server"
+    hana_system_type: "Master"
+    id_group_shm: "30220"
+    hana_instance_hostname: "{{ ansible_hostname }}"
+    hana_addhosts:
+    hana_sid: "HXE"
+    hana_instance_number: "90"
+    hana_system_usage: custom
+----
+
+NOTE: The backend you are using in this course is a test environment that is not officially supported by SAP, as such depending on the HANA installer version
+the installation prerequisite checks fail. To be safe add the following line to your instance: `hdblcm_params: "--ignore=check_platform"``
+
+NOTE:   In case of deploying a HANA scale-out cluster only one server must have `deployment_instance: true`, all other need this variable to be unset. The hosts of the scale-out cluster need to be listed in hana_addhosts
+
+TIP: If you want to install multiple HANA instances on one server you can add more than one instance here and the installer will loop over these instances.
+
+
+TIP: The variable information should be split to appropriate group_vars and host_vars files, because some information is shared across all servers (`group_vars/all`) and the whole SAP HANA servers(`group_vars/hana`), while other is special to the host itself (`host_vars/hana1.example.com`)
+
+
+Now create your var files and playbook to run the installation.
+After the installation has finished, log into `hana1.example.com` and assume user `hxeadm` to see if SAP HANA is running:
+-----
+[root@hana1-GUID ~]# su - hxeadm
+Last login: Fri May 11 18:26:48 EDT 2018
+hxeadm@hana1-GUID:/usr/sap/HXE/HDB90> HDB info
+USER       PID  PPID %CPU    VSZ   RSS COMMAND
+hxeadm   11618 11617  1.6 116308  2940 -bash
+hxeadm   11680 11618  2.0 113260  1640  \_ /bin/sh /usr/sap/HXE/HDB90/HDB info
+hxeadm   11711 11680  0.0 151040  1804      \_ ps fx -U hxeadm -o user,pid,ppid,pcpu,vsz,rss,args
+hxeadm    6805     1  0.0  43232  1888 sapstart pf=/hana/shared/HXE/profile/HXE_HDB90_hana1-GUID
+hxeadm    6814  6805  0.1 225944 31780  \_ /usr/sap/HXE/HDB90/hana1-GUID/trace/hdb.sapHXE_HDB90 -d -nw -f /usr/sap/HXE/HDB90/hana1-GUID/daemon.ini pf=/usr/sap/HXE/SYS/profile/HXE_HDB90_hana1-GUID
+hxeadm    6830  6814 53.7 7641816 5200160      \_ hdbnameserver
+hxeadm    7149  6814  1.3 1254272 259132      \_ hdbcompileserver
+hxeadm    7151  6814 57.3 3253036 2306784      \_ hdbpreprocessor
+hxeadm    7194  6814 51.7 7298972 5381920      \_ hdbindexserver -port 39003
+hxeadm    7196  6814  3.3 2038712 936348      \_ hdbxsengine -port 39007
+hxeadm    8293  6814  1.8 1567760 292932      \_ hdbwebdispatcher
+hxeadm    6726     1  0.4 519388 23088 /usr/sap/HXE/HDB90/exe/sapstartsrv pf=/hana/shared/HXE/profile/HXE_HDB90_hana1-GUID -D -u hxeadm
+
+-----
+
+
+
+WARNING: *Solution Below*
+
+You need to create the following files:
+
+1. The required playbook: `./install-hana.yml`:
++
+----
+- name: Install SAP HANA
+  hosts: hana
+  become: yes
+
+  roles:
+              - mk-ansible-roles.subscribe-rhn
+              - linux-system-roles.timesync
+              - mk-ansible-roles.disk-init
+              - mk-ansible-roles.saphana-preconfigure
+              - mk-ansible-roles.saphana-deploy
+----
+
+2. The required group_vars file: `./group_vars/hana`
++
+----
+---
+#####################################################
+# Default Subscription Information for HANA Servers
+# used in: mk-ansible-roles.rhn-subscribe
+#
+satellite_server: satellite.example.com
+reg_activation_key: sap-hana
+reg_organization_id: RHPDS_Demo
+reg_server_insecure: yes
+reg_osrelease: 7.4
+
+# Can be set to false
+repo_reset: true
+
+repositories:
+     - rhel-7-server-e4s-rpms
+     - rhel-sap-hana-for-rhel-7-server-e4s-rpms
+
+#####################################################
+#
+# Default Timeserver settings
+# used in: rhel-system-roles.timeserver
+#
+ntp_servers:
+        - hostname: 0.rhel.pool.ntp.org
+          iburst: yes
+        - hostname: 1.rhel.pool.ntp.org
+          iburst: yes
+        - hostname: 2.rhel.pool.ntp.org
+          iburst: yes
+        - hostname: 3.rhel.pool.ntp.org
+          iburst: yes
+
+######################################################
+#
+# Default settings
+# used in the hana deployment roles
+#
+
+# SAP-Media Check
+install_nfs: "tower.example.com:/export"
+installroot: /install/hxe
+installversion: "HANA_EXPRESS_20"
+hana_installdir: "{{ installroot + '/' + installversion }}"
+
+hana_pw_hostagent_ssl: "Ab01%%bA"
+id_user_sapadm: "30200"
+id_group_shm: "30220"
+id_group_sapsys: "30200"
+pw_user_sapadm_clear: "Adm12356"
+----
+
+3. The required host_vars file: `./host_vars/hana1.example.com`:
++
+----
+---
+#### Disk Configguration
+disks:
+        /dev/vdb: vg00
+logvols:
+        hana_shared:
+                size: 32G
+                vol: vg00
+                mountpoint: /hana/shared
+        hana_data:
+                size: 32G
+                vol: vg00
+                mountpoint: /hana/data
+        hana_logs:
+                size: 16G
+                vol: vg00
+                mountpoint: /hana/logs
+        usr_sap:
+                size: 50G
+                vol: vg00
+                mountpoint: /usr/sap
+
+#### HANA Configuration
+hostname: "{{ ansible_hostname }}"
+
+deployment_instance: true
+
+instances:
+  instance01:
+    hdblcm_params: "--ignore=check_min_mem,check_platform"
+    id_user_sidadm: "30210"
+    pw_user_sidadm: "Adm12356"
+    hana_pw_system_user_clear: "System123"
+    hana_components: "client,server"
+    hana_system_type: "Master"
+    id_group_shm: "30220"
+    hana_instance_hostname: "{{ ansible_hostname }}"
+    hana_addhosts:
+    hana_sid: "HXE"
+    hana_instance_number: "90"
+    hana_system_usage: custom
+----
+
+
+Now kick off the installation as user ansible on workstion-GUID:
+
+-----
+[ansible@tower-GUID ~]$ ansible-playbook install-hana.yml
+-----
+
+TIP: run with -vvv to increase debuglevel to get mor information whats happening
+
+You finished your Lab deploying SAP HANA fully automated. You now know the basics and should be able to integrate this with Satellite, Ansible Tower and even CloudForms. To learn about thes tools join us in one of the upcoming management classes.
+
+
+
+=== Bonus Labs
+
+==== Install and configure Insights
+
+If you have access to your own subscription run `subscription-manager unregister` and register the server against your subscription.
+Then follow the instructions of https://access.redhat.com/products/red-hat-insights#getstarted[ the getting started guide^]
+
+WARNING: *Solution Below*
+
+As we are in an ansible training we use an ansible playbook to add insights.
+
+1. Install the insights role from galaxy:
+
+    # ansible-galaxy install redhataccess.redhat-access-insights-client
+
+2. Create a playbook `install-insights.yml` to install to configure Insights
+
+   # Playbook installing Insights
+   ---
+   - hosts: hana1.example.com
+     become: yes
+     roles:
+     - { role: redhataccess.redhat-access-insights-client, when: ansible_os_family == 'RedHat' }
+
+3. Run the playbook
+
+   # ansible-playbook install-insights.yml
+
+4. Goto https://access.redhat.com/insights[the Red Hat Insights portal^] to see the results
+
+==== Upgrade HANA Server
+Do you know how to upgrade SAP HANA servers
+
+1. with new RHEL patches?
+2. to a new RHEL minor reg_osrelease?
+
+WARNING: *Solution Below*
+
+1. Update the system to the latest patches in the current RHEL minor release:
+* Make sure you have your release set to the current minor release:
+
+  [root@hana1-GUID ~]# subscription-manager release
+  Release: 7.4
+
+* update the system
+
+  [root@hana1-GUID ~]# yum -y update
+* stop the HANA database
+
+  [root@hana1-GUID ~]# su - hxeadm
+  hxeadm@hana1-GUID.rhpds:/usr/sap/HXE/HDB90> HDB stop
+
+
+* reboot
+  [root@hana1-GUID ~]# reboot
+
+* login and start HANA again (in case it is not started automatically)
+
+  [root@workstation-GUID ~]# ssh hana1.example.com
+  [root@hana1-GUID ~]# su - hxeadm
+  hxeadm@hana1-GUID.rhpds:/usr/sap/HXE/HDB90> HDB start
+
+2. Update the system to the latest patches in a newer RHEL minor release:
+* Check available releases:
+
+  [root@hana1-GUID ~]# subscription-manager release --list
+  +-------------------------------------------+
+            Available Releases
+  +-------------------------------------------+
+  7.0
+  7.1
+  7.2
+  7.3
+  7.4
+  7.5
+  7Server
+
+* Set the desired release 7.5
+
+  [root@hana1-GUID ~]# subscription-manager release --set 7.5
+  Release set to: 7.5
+
+* update the systems and reboot as described in the previous steps
+
+Do you really want to do this manually? If not, here is a playbook that covers both upgrade scenarios. If you change `reg_osrelease`, an upgrade to another RHEL release will be performed.
+
+-----
+- name: Update Hana Server
+  hosts: hana1.example.com
+  become: yes
+
+  vars:
+              # Repositories setup
+              reg_osrelease: 7.5
+              repo_reset: false
+              repositories:
+                 - rhel-7-server-e4s-rpms
+                 - rhel-sap-hana-for-rhel-7-server-e4s-rpms
+
+              sid: hxe
+
+  roles:
+              ## We can use this role to change  repsoitories, if we need to and to switch the minor relase
+              - { role: mk-ansible-roles.subscribe-rhn }
+
+  tasks:
+              ## update the system
+              - name: ensure the the system is updated
+                yum: name=* state=latest
+
+              ## stop database
+              - name: ensure HANA is stopped
+                command: su - "{{ sid + 'adm' }}" -c "HDB stop"
+
+              # Reboot the server now and wait until it is back
+              # inspired by https://support.ansible.com/hc/en-us/articles/201958037-Reboot-a-server-and-wait-for-it-to-come-back
+              - name: restart machine if required
+                shell: sleep 2 && shutdown -r now "Ansible updates triggered"
+                async: 1
+                poll: 0
+                become: true
+                ignore_errors: true
+
+              - name: waiting for server to come back
+                local_action: wait_for host={{ inventory_hostname }} port=22 state=started delay=90 sleep=2 timeout=900
+                become: false
+
+              ## start database again
+              - name: ensure HANA is started
+                command: su - "{{ sid + 'adm' }}" -c "HDB start"
+
+
+-----
+
+TIP: Read the man page for `needs-restarting` and enhance the playbook by using `needs-restarting -r`
+
+TIP: You could also think about splitting this playbook into separate roles, that can be reused in differetn playbooks, such as:
+
+* Stop HANA instances
+* Start HANA instances
+* Update Server. In this role you could implement reboot as a handler, so that a system is only rebooted if a new kernel or other patch which requires a reboot is installed

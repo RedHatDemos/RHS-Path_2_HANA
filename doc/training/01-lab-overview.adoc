@@ -1,0 +1,39 @@
+
+
+
+After this lab you will have a basic understanding of how to use and modify the predefined ansible roles for installing SAP HANA with Ansible Tower and Red Hat CloudForms.
+
+=== Product Versions used in this lab:
+
+[cols="1,1",options="header"]
+|=======
+|Product |Version
+|Red Hat CloudForms |4.6.4
+|Red Hat Enterprise Linux |7.4
+|Ansible Tower |3.3.0
+|Red Hat Satellite |6.4
+|=======
+
+=== Requirements to access and perform this lab
+
+==== Base requirements
+
+* A computer with access to Internet :-)
+* SSH client (for Microsoft Windows users link:https://www.putty.org/[Putty] or link:https://mobaxterm.mobatek.net/download.html[MobaXterm] is recommended)
+* Firefox 17 or higher, or Chromium / Chrome
+
+==== Server Environment
+
+A full new demo environment is deployed on every request. To make the environment unique a 4 character identifier is assigned to it (i.e. `1e37`), this identifier is referred in this documentation as your *GUID*.
+
+The demo environment consists of the following systems:
+
+[cols="1,1,1,2",options="header"]
+|=======
+| Hostname | Internal IP | External name | Description
+|`tower.example.com` |`10.0.0.10` | tower-GUID.rhpds.opentlc.com |Jump host and Ansible Tower host
+|`cf.example.com` |`10.0.0.100` |  cf-GUID.rhpds.opentlc.com |CloudForms server
+|`hana0.example.com` |`10.0.0.20` | hana0-GUID.rhpds.opentlc.com |SAP HANA host
+|`hana1.example.com` |`10.0.0.21` | hana1-GUID.rhpds.opentlc.com |SAP HANA host
+|`satellite.example.com` |`10.0.0.101` | satellite-GUID.rhpds.opentlc.com |Red Hat Satellite server
+|=======
