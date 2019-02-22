@@ -3,7 +3,16 @@
 - name: Create VM and register with Satellite
   hosts: all
  
+  vars:
+     ovirt:
+      host: '{{ lookup("env", "OVIRT_URL") }}'
+      username: '{{ lookup("env", "OVIRT_USERNAME") }}'
+      password: '{{ lookup("env", "OVIRT_PASSWORD") }}'
+ 
   tasks:
+ 
+      - debug: var=ovirt
+
       - name: Check for valid vmid
         fail:
           msg: 'Please define variable vmid'
@@ -20,9 +29,9 @@
 
       - name: Obtain SSO token
         ovirt_auth:
-          #url: https://rhvm.example.com/ovirt-engine/api
-          #username: admin@internal
-          #password: 'r3dh4t1!'
+          url: "{{ ovirt.host }}"
+          username: "{{ ovirt.username }}"
+          password: "{{ ovirt.password }}" 
           state: present
           insecure: true
   
