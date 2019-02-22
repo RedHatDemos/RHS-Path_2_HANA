@@ -11,8 +11,6 @@
  
   tasks:
  
-      - debug: var=ovirt
-
       - name: Check for valid vmid
         fail:
           msg: 'Please define variable vmid'

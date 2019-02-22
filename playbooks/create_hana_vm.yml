@@ -25,9 +25,9 @@
 
       - name: Obtain SSO token
         ovirt_auth:
-          #url: https://rhvm.example.com/ovirt-engine/api
-          #username: admin@internal
-          #password: 'r3dh4t1!'
+          url: '{{ lookup("env", "OVIRT_URL") }}'
+          username: '{{ lookup("env", "OVIRT_USERNAME") }}'
+          password: '{{ lookup("env", "OVIRT_PASSWORD") }}'
           state: present
           insecure: true
   
