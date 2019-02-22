@@ -1,0 +1,27 @@
+---
+
+# sap-hana-preconfigure
+#sap_hana_preconfigure_min_package_check: false
+sap_hana_preconfigure_reboot_after_update: true
+sap_hana_preconfigure_reboot_timeout: 600
+
+# SAP-Media Check (get unpacked HANA from Mountpoint)
+sap_hana_mediacheck_serverpath: "tower.example.com:/export/sap"
+sap_hana_mediacheck_mountpoint: /install
+#installversion: "HANA_EXPRESS_20"
+sap_hana_installdir: "{{ sap_hana_mediacheck_mountpoint + '/HANA_EXPRESS_20/DATA_UNITS/HDB_SERVER_LINUX_' + ansible_architecture|upper }}"
+
+# SAP-Media Check (unpack HXE from mountpoint)
+#sap_hana_mediacheck_serverpath: "vm30.tom.lan:/install"
+#sap_hana_mediacheck_archive: "download/hxe.tgz"
+#sap_hana_mediacheck_install: "/install"
+#sap_hana_mediacheck_unarchive_cmd: "tar xzf"
+#sap_hana_installdir: "{{ sap_hana_mediacheck_install + '/HANA_EXPRESS_20/DATA_UNITS/HDB_SERVER_LINUX_' + ansible_architecture|upper }}"
+
+# sap-hana-deploy
+hana_pw_hostagent_ssl: "Ab01%%bA"
+id_user_sapadm: "30200"
+id_group_shm: "30220"
+id_group_sapsys: "30200"
+pw_user_sapadm_clear: "Adm12356"
+

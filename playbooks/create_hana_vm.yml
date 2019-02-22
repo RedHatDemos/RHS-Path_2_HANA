@@ -77,11 +77,11 @@
           interface: virtio_scsi
           storage_domain: vms
 
-      - name: add disk to hanavm
+      - name: add host to hanavm
         add_host:
           host: vm{{ vmid }}
           ansible_host: 10.0.1.{{ vmid }}
-          group: hanavm
+          groups: hanavm
       
       - name: remove host identification from ${HOME}/.ssh/known_hosts
         lineinfile:
