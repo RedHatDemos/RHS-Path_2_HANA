@@ -1,7 +1,7 @@
 ---
 
 - name: Create VM and register with Satellite
-  hosts: rhvm
+  hosts: all
  
   tasks:
       - name: Check for valid vmid
@@ -20,9 +20,9 @@
 
       - name: Obtain SSO token
         ovirt_auth:
-          url: https://rhvm.example.com/ovirt-engine/api
-          username: admin@internal
-          password: 'r3dh4t1!'
+          #url: https://rhvm.example.com/ovirt-engine/api
+          #username: admin@internal
+          #password: 'r3dh4t1!'
           state: present
           insecure: true
   
