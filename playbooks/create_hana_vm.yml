@@ -1,0 +1,102 @@
+---
+
+- name: Create VM and register with Satellite
+  hosts: rhvm
+
+  tasks:
+      - name: Check if vmid is defined
+        fail:
+          msg: 'Please define variable vmid'
+        when: (vmid is undefined) or (vmid is none) or (vmid | trim == '')
+
+      - name: Check for valid vmid
+        fail:
+          msg: 'Please chose vmid between 10 and 69'
+        when: (vmid|int < 10 ) or (vmid|int > 70 )
+
+    # When user will set following environment variables:
+    #   OVIRT_URL = https://fqdn/ovirt-engine/api
+    #   OVIRT_USERNAME = admin@internal
+    #   OVIRT_PASSWORD = the_password
+    # User can login the oVirt using environment variable instead of variables
+    # in yaml file. run ". env.sh" to set these
+    # This is mainly useful when using Ansible Tower or AWX, as it will work
+    # for Red Hat Virtualization creadentials type.
+
+      - name: Obtain SSO token
+        ovirt_auth:
+          url: https://rhvm.example.com/ovirt-engine/api
+          username: admin@internal
+          password: 'r3dh4t1!'
+          state: present
+          insecure: true
+  
+      - name: Creates a new Virtual Machine from template named 'rhel7_template'
+        ovirt_vms:
+          auth: "{{ ovirt_auth }}"
+          state: present
+          name: vm{{ vmid }}
+          template: rhel-7.4-hana-template-ci
+          cluster: Default
+          #graphical_console:
+          #  - headless_mode: true
+          high_availability: no
+          #memory: 4GiB
+          #memory_max: 4GiB
+          cloud_init:
+            host_name: vm{{ vmid }}.example.com
+            user_name: root
+            root_password: 'r3dh4t1!'
+            regenerate_ssh_keys: true
+            authorized_ssh_keys: 'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDUyxw09Bs2p2EefZiIqcUfJk5sMG71ODSrQWYlL3G6zLVFkK+yBCLtBOqrlWqe68LdkYEd/f+otFnuECumgyaOJjqujrfj/nxVNu2vX5TolzcmjgtnMvOJct3O889E2rKQR8GJqlzLV4SVQnI3sHHUwcApY+LHazi9JjjzB8objp8U544xSaJqqvIs6RotJ3TNVW6BTNO7ZSjqNii90tZZJjfXSelBMiwcUUu+7CXUhWSS9p0vgxm7ESwRV27t/h1uQHipCbhz6dcG+mROUOdd2CocERXeu1jdnsmsY7fUxz2If8gMQopbQdZ5xb81RX7+giYWQEJxrNLpzn1a04Jr root@tower-REPL.rhpds.opentlc.com'
+            nic_boot_protocol: static
+            nic_ip_address: 10.0.1.{{ vmid }}
+            nic_netmask: 255.255.0.0
+            nic_gateway: 10.0.0.2
+            nic_name: eth0
+            nic_on_boot: true
+            dns_servers: 10.0.0.1
+            dns_search: example.com
+          nics:
+            - name: nic1
+              profile_name: ovirtmgmt/ovirtmgmt
+              interface: virtio
+              mac_adress: 56:6f:01:a3:00:{{ vmid }}
+          wait: true
+        register: new_ovirt_vms
+
+      # debug: var=new_ovirt_vms
+
+      - name: add disk for /hana
+        ovirt_disk:
+          auth: "{{ ovirt_auth }}"
+          name: vm{{ vmid }}_hana_disk
+          vm_name: vm{{ vmid }}
+          size: 140GiB
+          format: cow
+          interface: virtio_scsi
+          storage_domain: vms
+
+      - name: add disk to hanavm
+        add_host:
+          host: vm{{ vmid }}
+          ansible_host: 10.0.1.{{ vmid }}
+          group: hanavm
+      
+      - name: remove host identification from ${HOME}/.ssh/known_hosts
+        lineinfile:
+          regexp: '^10.0.1.{{ vmid }} '
+          path: ~/.ssh/known_hosts
+          state: absent
+
+- name: Finalize vm{{ vmid }}
+  hosts: hanavm
+  
+  vars:
+    - sap_hostname: vm{{ vmid }}
+    - sap_domain: example.com
+
+  roles:
+    - sap-base-settings
+    - subscribe-rhn
+    - disk-init

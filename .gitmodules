@@ -1,0 +1,24 @@
+[submodule "playbooks/roles/sap-base-settings"]
+	path = playbooks/roles/sap-base-settings
+	url = https://github.com/linux-system-roles/sap-base-settings.git
+[submodule "playbooks/roles/sap-hana-preconfigure"]
+	path = playbooks/roles/sap-hana-preconfigure
+	url = https://github.com/linux-system-roles/sap-hana-preconfigure.git
+[submodule "subscribe-rhn"]
+	path = subscribe-rhn
+	url = https://github.com/mk-ansible-roles/subscribe-rhn
+[submodule "playbooks/roles/subscribe-rhn"]
+	path = playbooks/roles/subscribe-rhn
+	url = https://github.com/mk-ansible-roles/subscribe-rhn
+[submodule "playbooks/roles/disk-init"]
+	path = playbooks/roles/disk-init
+	url = https://github.com/mk-ansible-roles/disk-init.git
+[submodule "sap-hana-mediacheck"]
+	path = sap-hana-mediacheck
+	url = https://github.com/mk-ansible-roles/sap-hana-mediacheck
+[submodule "playbooks/roles/sap-hana-mediacheck"]
+	path = playbooks/roles/sap-hana-mediacheck
+	url = https://github.com/mk-ansible-roles/sap-hana-mediacheck
+[submodule "playbooks/roles/sap-hana-hostagent"]
+	path = playbooks/roles/sap-hana-hostagent
+	url = https://github.com/mk-ansible-roles/sap-hana-hostagent.git

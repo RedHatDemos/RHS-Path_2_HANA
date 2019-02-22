@@ -1,0 +1,66 @@
+---
+
+#####################################################
+# Default Subscription Information for HANA Servers
+# used in: mk-ansible-roles.rhn-subscribe
+#
+satellite_server: satellite.example.com
+reg_activation_key: "SAP HANA Server"
+reg_organization_id: RHPDS
+reg_server_insecure: yes
+reg_osrelease: 7.4
+
+# Can be set to false
+repo_reset: false
+
+repositories:
+     - rhel-7-server-e4s-rpms
+     - rhel-sap-hana-for-rhel-7-server-e4s-rpms
+     - rhel-7-server-satellite-tools-6.4-rpms
+
+#### Disk Configguration
+disks:
+        /dev/sdb: vg00
+logvols:
+        hana_shared:
+                size: 32G
+                vol: vg00
+                mountpoint: /hana/shared
+        hana_data:
+                size: 32G
+                vol: vg00
+                mountpoint: /hana/data
+        hana_logs:
+                size: 16G
+                vol: vg00
+                mountpoint: /hana/logs
+        usr_sap:
+                size: 50G
+                vol: vg00
+                mountpoint: /usr/sap
+
+#### HANA Configuration
+
+hostname: "{{ ansible_hostname }}"
+hana_sid: "{{ foreman_params.hana_sid | default('HXE') }}"
+hana_instance: "{{ foreman_params.hana_instance | default('90') }}"
+
+deployment_instance: true
+#hsr_deploy_type: enable
+
+instances:
+  instance01:
+    hdblcm_params: "--ignore=check_min_mem,check_platform"
+    id_user_sidadm: "30210"
+    pw_user_sidadm: "Adm12356"
+    hana_pw_system_user_clear: "System123"
+    hana_components: "client,server"
+    hana_system_type: "Master"
+    id_group_shm: "30220"
+    hana_instance_hostname: "{{ ansible_hostname }}"
+    hana_addhosts:
+    hana_sid: "{{ hana_sid | upper }}"
+    hana_instance_number: "{{ hana_instance }}"
+    hana_system_usage: custom
+
+

@@ -1,0 +1,17 @@
+---
+
+#####################################################
+#
+# Default Timeserver settings
+# used in: rhel-system-roles.timeserver
+#
+ntp_servers:
+        - hostname: 0.rhel.pool.ntp.org
+          iburst: yes
+        - hostname: 1.rhel.pool.ntp.org
+          iburst: yes
+        - hostname: 2.rhel.pool.ntp.org
+          iburst: yes
+        - hostname: 3.rhel.pool.ntp.org
+          iburst: yes
+

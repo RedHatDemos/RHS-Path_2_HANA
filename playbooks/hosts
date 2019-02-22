@@ -1,0 +1,9 @@
+[rhvm]
+rhvm.example.com
+
+[rhvh]
+rhvh0.example.com
+rhvh1.example.com
+
+[rh-templ]
+10.0.1.60

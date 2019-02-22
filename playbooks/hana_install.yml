@@ -1,0 +1,11 @@
+---
+- hosts: all
+
+  roles:
+    # sap-hana-mediacheck
+    # sap-hana-preconfigure
+    - sap-hostagent-deploy
+    - sap-hana-deploy
+    - sap-hana-hsr
+
+

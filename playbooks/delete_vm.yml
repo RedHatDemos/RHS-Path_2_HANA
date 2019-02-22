@@ -1,0 +1,47 @@
+---
+
+- name: Create VM and register with Satellite
+  hosts: rhvm
+ 
+  tasks:
+      - name: Check for valid vmid
+        fail:
+          msg: 'Please define variable vmid'
+        when: (vmid is undefined) or (vmid is none) or (vmid | trim == '')
+
+    # When user will set following environment variables:
+    #   OVIRT_URL = https://fqdn/ovirt-engine/api
+    #   OVIRT_USERNAME = admin@internal
+    #   OVIRT_PASSWORD = the_password
+    # User can login the oVirt using environment variable instead of variables
+    # in yaml file. run ". env.sh" to set these
+    # This is mainly useful when using Ansible Tower or AWX, as it will work
+    # for Red Hat Virtualization creadentials type.
+
+      - name: Obtain SSO token
+        ovirt_auth:
+          url: https://rhvm.example.com/ovirt-engine/api
+          username: admin@internal
+          password: 'r3dh4t1!'
+          state: present
+          insecure: true
+  
+      - name: remove vm{{ vmid }}
+        ovirt_vms:
+          auth: "{{ ovirt_auth }}"
+          state: absent
+          name: vm{{ vmid }}
+          cluster: Default
+
+      - name: check if additional disk is removed
+        ovirt_disk:
+          auth: "{{ ovirt_auth }}"
+          name: vm{{ vmid }}_hana_disk
+          state: absent
+
+      - name: ensure vm{{ vmid }} is deleted from satellite
+        command: hammer host delete --name vm{{ vmid }}.example.com
+        register: delete_from_satellite
+        changed_when: delete_from_satellite is succeeded
+        failed_when: ( delete_from_satellite.rc > 0 ) and (delete_from_satellite.rc != 70)
+        delegate_to: satellite.example.com
