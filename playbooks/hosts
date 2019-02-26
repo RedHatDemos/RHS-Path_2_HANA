@@ -7,3 +7,6 @@ rhvh1.example.com
 
 [rh-templ]
 10.0.1.60
+
+[foreman_content_view_rhel7hanasoe]
+10.0.1.44

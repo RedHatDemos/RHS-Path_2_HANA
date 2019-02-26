@@ -1,6 +1,6 @@
 ---
 
-- name: Create VM and register with Satellite
+- name: Create VM in RHV Manager
   hosts: all
 
   tasks:
@@ -32,9 +32,9 @@
           insecure: true
   
       - name: Creates a new Virtual Machine from template named 'rhel7_template'
-        ovirt_vms:
+        ovirt_vm:
           auth: "{{ ovirt_auth }}"
-          state: present
+          state: running
           name: vm{{ vmid }}
           template: rhel-7.4-hana-template-ci
           cluster: Default
@@ -79,8 +79,7 @@
 
       - name: add host to hanavm
         add_host:
-          host: vm{{ vmid }}
-          ansible_host: 10.0.1.{{ vmid }}
+          host: 10.0.1.{{ vmid }}
           groups: hanavm
       
       - name: remove host identification from ${HOME}/.ssh/known_hosts
@@ -89,7 +88,9 @@
           path: ~/.ssh/known_hosts
           state: absent
 
-- name: Finalize vm{{ vmid }}
+      - debug: var=groups
+
+- name: Register vm{{ vmid }} and configure disks
   hosts: hanavm
   
   vars:

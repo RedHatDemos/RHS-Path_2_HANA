@@ -1,11 +1,17 @@
 ---
-- hosts: all
+# NOTE: This playbook has two plays, because we need the handler to run after the hostagent is installed
+
+- name: Install SAP HANA Hostagent
+  hosts: all
 
   roles:
-    # sap-hana-mediacheck
-    # sap-hana-preconfigure
-    - sap-hostagent-deploy
-    - sap-hana-deploy
-    - sap-hana-hsr
+    - sap-hana-hostagent
+
+- name: Install SAP HANA
+  hosts: all
+
+  roles:
+    - sap-hana-deployment
+    # sap-hana-hsr
 
 

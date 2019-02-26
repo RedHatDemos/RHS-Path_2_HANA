@@ -18,10 +18,60 @@ sap_hana_installdir: "{{ sap_hana_mediacheck_mountpoint + '/HANA_EXPRESS_20/DATA
 #sap_hana_mediacheck_unarchive_cmd: "tar xzf"
 #sap_hana_installdir: "{{ sap_hana_mediacheck_install + '/HANA_EXPRESS_20/DATA_UNITS/HDB_SERVER_LINUX_' + ansible_architecture|upper }}"
 
+#---------------------
+### Now Some SID Magic
+hana_sid: HXE
+hana_instance_number: 90
+
+# SAP HANA Hostagent
+# UID/GID for sapadm:sapsys
+sap_uid_sapadm: 30200
+sap_gid_sapsys: 30200
+
+# Passwords in cleartext should go in a vault file 
+# password for user sapadm
+sap_hana_hostagent_sapadm_pw_clear: "MyS3cret!"
+#sap_hana_hostagent_sapadm_pw: "MyS3cret!"
+# Secret for password encryption
+sap_hana_hostagent_ssl: "MyS3cret!"
+sap_hana_hostagent_ssl_pw: "MyS3cret!"
+
+# Define either one of the following variables depending on installation method
+#sap_hana_hostagent_installdir: /path/to/unpacked/hostagent packages
+#sap_hana_hostagent_rpm: /path/to/hostagentrpm
+#sap_hana_hostagent_archive: /path/to/sap_hana_hostagent_archive
+# In case you install/upgrade from archive this is the default unpack command
+#sap_hana_hostagent_unarchive_cmd: "/usr/sap/hostctrl/exe/SAPCAR -xvf "
+
+## In case you want to use the shipped hostagent from HANADB Use this command definition:
+sap_hana_hostagent_archive: "{{ sap_hana_installdir }}/server/HOSTAGENT.TGZ"
+sap_hana_hostagent_unarchive_cmd: "tar --strip-components=3 -xzf "
+
+
 # sap-hana-deploy
-hana_pw_hostagent_ssl: "Ab01%%bA"
-id_user_sapadm: "30200"
-id_group_shm: "30220"
-id_group_sapsys: "30200"
+# TODO: These two should go in a vault file
 pw_user_sapadm_clear: "Adm12356"
 
+id_user_sapadm: "{{ sap_uid_sapadm }}"
+id_group_sapsys: "{{ sap_gid_sapsys }}"
+id_group_shm: "30220"
+
+deployment_instance: true
+#hsr_deploy_type: enable
+
+# User magic with instance number
+# as we are using just one instance
+instances:
+  instance01:
+    hdblcm_params: "--ignore=check_min_mem,check_platform"
+    id_user_sidadm: "{{ 30300 + hana_instance_number|int }}"
+    pw_user_sidadm: "Adm12356"
+    hana_pw_system_user_clear: "System123"
+    hana_components: "client,server"
+    hana_system_type: "Master"
+    id_group_shm: "{{ id_group_shm }}"
+    hana_instance_hostname: "{{ sap_hostname }}"
+    hana_addhosts:
+    hana_sid: "{{ hana_sid|upper }}"
+    hana_instance_number: "{{ hana_instance_number }}"
+    hana_system_usage: custom

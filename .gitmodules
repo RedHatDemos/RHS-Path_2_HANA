@@ -22,3 +22,6 @@
 [submodule "playbooks/roles/sap-hana-hostagent"]
 	path = playbooks/roles/sap-hana-hostagent
 	url = https://github.com/mk-ansible-roles/sap-hana-hostagent.git
+[submodule "playbooks/roles/sap-hana-deployment"]
+	path = playbooks/roles/sap-hana-deployment
+	url = https://github.com/mk-ansible-roles/sap-hana-deployment.git
