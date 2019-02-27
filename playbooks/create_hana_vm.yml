@@ -2,6 +2,7 @@
 
 - name: Create VM in RHV Manager
   hosts: rhvm.example.com
+  gather_facts: no
 
   tasks:
       - name: Check if vmid is defined

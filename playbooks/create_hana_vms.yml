@@ -2,6 +2,7 @@
 
 - name: Create VM in RHV Manager
   hosts: rhvm.example.com
+  gather_facts: no
 
   tasks:
       - name: Check if vmid is defined
@@ -95,7 +96,7 @@
 
       - debug: var=groups
 
-- name: Register vm{{ vmid }} and configure disks
+- name: Register vm{{ vmid }} to vm{{ vmid|int + vmnum|int - 1 }}  and configure disks
   hosts: hanavm
   
   vars:

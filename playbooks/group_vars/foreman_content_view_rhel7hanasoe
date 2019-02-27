@@ -59,6 +59,8 @@ id_group_shm: "30220"
 deployment_instance: true
 #hsr_deploy_type: enable
 
+sap_hostname: "{{ ansible_hostname }}"
+
 # User magic with instance number
 # as we are using just one instance
 instances:
@@ -70,7 +72,7 @@ instances:
     hana_components: "client,server"
     hana_system_type: "Master"
     id_group_shm: "{{ id_group_shm }}"
-    hana_instance_hostname: "{{ sap_hostname }}"
+    hana_instance_hostname: "{{ ansible_hostname }}"
     hana_addhosts:
     hana_sid: "{{ hana_sid|upper }}"
     hana_instance_number: "{{ hana_instance_number }}"

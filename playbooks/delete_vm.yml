@@ -2,6 +2,7 @@
 
 - name: Delete VM from RHVM and Satellite
   hosts: rhvm.example.com
+  gather_facts: no
  
   vars:
      ovirt:
