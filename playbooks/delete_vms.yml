@@ -1,0 +1,60 @@
+---
+
+- name: Delete VMs from RHVM and Satellite
+  hosts: rhvm.example.com
+  gather_facts: no
+ 
+  vars:
+     ovirt:
+      host: '{{ lookup("env", "OVIRT_URL") }}'
+      username: '{{ lookup("env", "OVIRT_USERNAME") }}'
+      password: '{{ lookup("env", "OVIRT_PASSWORD") }}'
+ 
+  tasks:
+ 
+      - name: Check for valid vmid
+        fail:
+          msg: 'Please define variable vmid'
+        when: (vmid is undefined) or (vmid is none) or (vmid | trim == '')
+
+      - name: set vmnum=1 
+        set_fact: vmnum=1
+        when: vmnum is undefined
+
+      - name: Check for valid vmnum
+        fail:
+          msg: 'vmnum is out of range'
+        when: ( vmnum|int  < 1 ) or (( vmnum|int - 1 + vmid|int ) > 254 )
+
+      - debug: var=vmnum
+
+      - name: Obtain SSO token
+        ovirt_auth:
+          url: "{{ ovirt.host }}"
+          username: "{{ ovirt.username }}"
+          password: "{{ ovirt.password }}" 
+          state: present
+          insecure: true
+  
+      - name: remove vm{{ vmid }} to vm{{ vmid|int + vmnum|int - 1 }}
+        ovirt_vm:
+          auth: "{{ ovirt_auth }}"
+          state: absent
+          name: vm{{ item }}
+          cluster: Default
+        with_sequence: start={{ vmid }} end={{ vmid|int + vmnum|int - 1 }} stride=1
+
+      - name: check if additional disks are removed
+        ovirt_disk:
+          auth: "{{ ovirt_auth }}"
+          name: vm{{ item }}_hana_disk
+          state: absent
+        with_sequence: start={{ vmid }} end={{ vmid|int + vmnum|int - 1 }} stride=1
+
+      - name: ensure vm{{ vmid }} to vm{{ vmid|int + vmnum|int - 1 }} are deleted from satellite
+        command: hammer host delete --name vm{{ item }}.example.com
+        register: delete_from_satellite
+        changed_when: delete_from_satellite is succeeded
+        failed_when: ( delete_from_satellite.rc > 0 ) and (delete_from_satellite.rc != 70)
+        delegate_to: satellite.example.com
+        with_sequence: start={{ vmid }} end={{ vmid|int + vmnum|int - 1 }} stride=1
