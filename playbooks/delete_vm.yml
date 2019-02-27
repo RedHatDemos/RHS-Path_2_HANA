@@ -1,7 +1,7 @@
 ---
 
-- name: Create VM and register with Satellite
-  hosts: all
+- name: Delete VM from RHVM and Satellite
+  hosts: rhvm.example.com
  
   vars:
      ovirt:
