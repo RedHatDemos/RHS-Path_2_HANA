@@ -110,8 +110,25 @@
   vars:
     - sap_hostname: "{{ inventory_hostname }}"
     - sap_domain: example.com
+    - network_connections:
+        - name: eth0
+          type: ethernet
+          autoconnect: yes
+          state: up
+          interface_name: eth0
+          ip:
+            dhcp4: no
+            gateway4: 10.0.0.2
+            dns:
+              - 10.0.0.1
+            dns_search:
+              - example.com
+            address:
+              - '{{ ansible_default_ipv4.address + "/16" }}'
 
+            
   roles:
     - sap-base-settings
     - subscribe-rhn
+    - rhel-system-roles.network
     - disk-init
