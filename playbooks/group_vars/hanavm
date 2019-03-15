@@ -16,7 +16,10 @@ repo_reset: false
 repositories:
      - rhel-7-server-e4s-rpms
      - rhel-sap-hana-for-rhel-7-server-e4s-rpms
-     - rhel-7-server-satellite-tools-6.4-rpms
+     - rhel-7-server-e4s-satellite-tools-6.4-rpms
+
+# Additional required for RHEL 7.6
+#    - rhel-7-server-e4s-optional-rpms
 
 #### Disk Configguration
 disks:
