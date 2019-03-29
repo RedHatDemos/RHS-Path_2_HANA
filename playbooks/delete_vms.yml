@@ -37,7 +37,7 @@
           insecure: true
   
       - name: remove vm{{ vmid }} to vm{{ vmid|int + vmnum|int - 1 }}
-        ovirt_vm:
+        ovirt_vms:
           auth: "{{ ovirt_auth }}"
           state: absent
           name: vm{{ item }}

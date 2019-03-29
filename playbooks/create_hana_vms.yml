@@ -33,7 +33,7 @@
           insecure: true
   
       - name: Creates a new Virtual Machine from template named 'rhel7_template-ci'
-        ovirt_vm:
+        ovirt_vms:
           auth: "{{ ovirt_auth }}"
           state: running
           name: vm{{ item }}
