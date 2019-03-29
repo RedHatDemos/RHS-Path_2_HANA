@@ -130,5 +130,11 @@
   roles:
     - sap-base-settings
     - subscribe-rhn
-    - rhel-system-roles.network
+    # rhel-system-roles.network
     - disk-init
+
+  tasks:
+    - name: Remove cloud-init (bug workaround)
+      yum:
+              name: cloud-init
+              state: absent
