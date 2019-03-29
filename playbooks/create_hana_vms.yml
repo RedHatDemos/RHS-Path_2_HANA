@@ -138,3 +138,7 @@
       yum:
               name: cloud-init
               state: absent
+    - name: Recreate unique machine id
+      shell: |
+              rm -f /etc/machine-id
+              systemd-machine-id-setup
