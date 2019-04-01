@@ -1,0 +1,176 @@
+---
+
+- name: Create VM in RHV Manager
+  hosts: rhvm.example.com
+  gather_facts: no
+  
+  vars:
+          ovirt_vm_memory: "32GiB"
+
+  tasks:
+      - name: Check if vmid is defined
+        fail:
+          msg: 'Please define variable vmid'
+        when: (vmid is undefined) or (vmid is none) or (vmid | trim == '')
+
+      - name: Check for valid vmid
+        fail:
+          msg: 'Please chose vmid between 10 and 69'
+        when: (vmid|int < 10 ) or (vmid|int > 70 )
+
+    # When user will set following environment variables:
+    #   OVIRT_URL = https://fqdn/ovirt-engine/api
+    #   OVIRT_USERNAME = admin@internal
+    #   OVIRT_PASSWORD = the_password
+    # User can login the oVirt using environment variable instead of variables
+    # in yaml file. run ". env.sh" to set these
+    # This is mainly useful when using Ansible Tower or AWX, as it will work
+    # for Red Hat Virtualization creadentials type.
+
+      - name: Obtain SSO token
+        ovirt_auth:
+          url: '{{ lookup("env", "OVIRT_URL") }}'
+          username: '{{ lookup("env", "OVIRT_USERNAME") }}'
+          password: '{{ lookup("env", "OVIRT_PASSWORD") }}'
+          state: present
+          insecure: true
+  
+      - name: Creates a new Virtual Machine from template named 'rhel7_template-ci'
+        ovirt_vms:
+          auth: "{{ ovirt_auth }}"
+          state: running
+          name: vm{{ item }}
+          template: rhel-7.4-hana-template-ci
+          cluster: Default
+          #graphical_console:
+          #  - headless_mode: true
+          high_availability: no
+          memory: "{{ ovirt_vm_memory }}"
+          #memory_max: 4GiB
+          cloud_init:
+            host_name: vm{{ item }}.example.com
+            user_name: root
+            root_password: 'r3dh4t1!'
+            regenerate_ssh_keys: true
+            authorized_ssh_keys: 'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDUyxw09Bs2p2EefZiIqcUfJk5sMG71ODSrQWYlL3G6zLVFkK+yBCLtBOqrlWqe68LdkYEd/f+otFnuECumgyaOJjqujrfj/nxVNu2vX5TolzcmjgtnMvOJct3O889E2rKQR8GJqlzLV4SVQnI3sHHUwcApY+LHazi9JjjzB8objp8U544xSaJqqvIs6RotJ3TNVW6BTNO7ZSjqNii90tZZJjfXSelBMiwcUUu+7CXUhWSS9p0vgxm7ESwRV27t/h1uQHipCbhz6dcG+mROUOdd2CocERXeu1jdnsmsY7fUxz2If8gMQopbQdZ5xb81RX7+giYWQEJxrNLpzn1a04Jr root@tower-REPL.rhpds.opentlc.com'
+            nic_boot_protocol: static
+            nic_ip_address: 10.0.1.{{ item }}
+            nic_netmask: 255.255.0.0
+            nic_gateway: 10.0.0.2
+            nic_name: eth0
+            nic_on_boot: true
+            dns_servers: 10.0.0.1
+            dns_search: example.com
+          nics:
+            - name: eth0
+              profile_name: ovirtmgmt/ovirtmgmt
+              interface: virtio
+              mac_adress: 56:6f:01:a3:00:{{ item }}
+            - name: eth1
+              profile_name: corosync/corosync
+              interface: virtio
+              mac_adress: 56:6f:01:a3:01:{{ item }}
+            - name: eth2
+              profile_name: HANA/HANA
+              interface: virtio
+              mac_adress: 56:6f:01:a3:02:{{ item }}
+          cloud_init_nics:
+            - nic_name: eth0
+              nic_boot_protocol: static
+              nic_ip_address: 10.0.1.{{ item }}
+              nic_netmask: 255.255.0.0
+              nic_gateway: 10.0.0.2
+              nic_on_boot: true
+              dns_servers: 10.0.0.1
+              dns_search: example.com
+            - nic_name: eth1
+              nic_boot_protocol: static
+              nic_ip_address: 192.168.101.{{ item }}
+              nic_netmask: 255.255.255.0
+              nic_on_boot: true
+            - nic_name: eth2
+              nic_boot_protocol: static
+              nic_ip_address: 192.168.102.{{ item }}
+              nic_netmask: 255.255.255.0
+              nic_on_boot: true
+          wait: true
+        with_sequence: start={{ vmid }} end={{ vmid|int + vmnum|int - 1 }} stride=1
+        register: new_ovirt_vms
+
+      - name: create VM Network Configuration
+        
+
+      - debug: var=new_ovirt_vms
+
+      - name: add disk for /hana
+        ovirt_disk:
+          auth: "{{ ovirt_auth }}"
+          name: vm{{ item }}_hana_disk
+          vm_name: vm{{ item }}
+          size: 140GiB
+          format: cow
+          interface: virtio_scsi
+          storage_domain: vms
+        with_sequence: start={{ vmid }} end={{ vmid|int + vmnum|int - 1 }} stride=1
+
+      - name: add host to hanavm
+        add_host:
+          name: vm{{ item }}
+          groups: hanavm
+        with_sequence: start={{ vmid }} end={{ vmid|int + vmnum|int - 1 }} stride=1
+      
+      - name: remove host identification from ${HOME}/.ssh/known_hosts
+        lineinfile:
+          regexp: '^10.0.1.{{ item }} '
+          path: ~/.ssh/known_hosts
+          state: absent
+        with_sequence: start={{ vmid }} end={{ vmid|int + vmnum|int - 1 }} stride=1
+
+      - debug: var=groups
+
+      - name: checking that machines are running
+        wait_for:
+           host: '10.0.1.{{ item }}'
+           port: 22
+           delay: 1
+           timeout: 300
+        with_sequence: start={{ vmid }} end={{ vmid|int + vmnum|int - 1 }} stride=1
+
+- name: Register vm{{ vmid }} to vm{{ vmid|int + vmnum|int - 1 }}  and configure disks
+  hosts: hanavm
+  
+  vars:
+    - sap_hostname: "{{ inventory_hostname }}"
+    - sap_domain: example.com
+    - network_connections:
+        - name: eth0
+          type: ethernet
+          autoconnect: yes
+          state: up
+          interface_name: eth0
+          ip:
+            dhcp4: no
+            gateway4: 10.0.0.2
+            dns:
+              - 10.0.0.1
+            dns_search:
+              - example.com
+            address:
+              - '{{ ansible_default_ipv4.address + "/16" }}'
+
+            
+  roles:
+    - sap-base-settings
+    - subscribe-rhn
+    # rhel-system-roles.network
+    - disk-init
+
+  tasks:
+    - name: Remove cloud-init (bug workaround)
+      yum:
+              name: cloud-init
+              state: absent
+    - name: Recreate unique machine id
+      shell: |
+              rm -f /etc/machine-id
+              systemd-machine-id-setup
