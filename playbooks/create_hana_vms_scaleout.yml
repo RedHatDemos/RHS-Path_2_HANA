@@ -97,9 +97,6 @@
         with_sequence: start={{ vmid }} end={{ vmid|int + vmnum|int - 1 }} stride=1
         register: new_ovirt_vms
 
-      - name: create VM Network Configuration
-        
-
       - debug: var=new_ovirt_vms
 
       - name: add disk for /hana
