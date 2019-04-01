@@ -3,6 +3,9 @@
 - name: Create VM in RHV Manager
   hosts: rhvm.example.com
   gather_facts: no
+  
+  vars:
+          ovirt_vm_memory: "32GiB"
 
   tasks:
       - name: Check if vmid is defined
@@ -42,7 +45,7 @@
           #graphical_console:
           #  - headless_mode: true
           high_availability: no
-          #memory: 4GiB
+          memory: "{{ ovirt_vm_memory }}"
           #memory_max: 4GiB
           cloud_init:
             host_name: vm{{ item }}.example.com
