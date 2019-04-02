@@ -61,6 +61,8 @@
             #nic_on_boot: true
             #dns_servers: 10.0.0.1
             #dns_search: example.com
+          # NOTE: MAC Address Parameter will be ignored
+          # I leave it, maybe newer version will work
           nics:
             - name: eth0
               profile_name: ovirtmgmt
