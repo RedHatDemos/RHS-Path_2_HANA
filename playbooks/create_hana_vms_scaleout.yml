@@ -69,7 +69,7 @@
               interface: virtio
               mac_adress: 56:6f:01:a3:00:{{ item }}
             - name: eth1
-              profile_name: HANA
+              profile_name: hana
               interface: virtio
               mac_adress: 56:6f:01:a3:01:{{ item }}
             - name: eth2
