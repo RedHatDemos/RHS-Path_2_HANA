@@ -53,14 +53,14 @@
             root_password: 'r3dh4t1!'
             regenerate_ssh_keys: true
             authorized_ssh_keys: 'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDUyxw09Bs2p2EefZiIqcUfJk5sMG71ODSrQWYlL3G6zLVFkK+yBCLtBOqrlWqe68LdkYEd/f+otFnuECumgyaOJjqujrfj/nxVNu2vX5TolzcmjgtnMvOJct3O889E2rKQR8GJqlzLV4SVQnI3sHHUwcApY+LHazi9JjjzB8objp8U544xSaJqqvIs6RotJ3TNVW6BTNO7ZSjqNii90tZZJjfXSelBMiwcUUu+7CXUhWSS9p0vgxm7ESwRV27t/h1uQHipCbhz6dcG+mROUOdd2CocERXeu1jdnsmsY7fUxz2If8gMQopbQdZ5xb81RX7+giYWQEJxrNLpzn1a04Jr root@tower-REPL.rhpds.opentlc.com'
-            nic_boot_protocol: static
-            nic_ip_address: 10.0.1.{{ item }}
-            nic_netmask: 255.255.0.0
-            nic_gateway: 10.0.0.2
-            nic_name: eth0
-            nic_on_boot: true
-            dns_servers: 10.0.0.1
-            dns_search: example.com
+            #nic_boot_protocol: static
+            #nic_ip_address: 10.0.1.{{ item }}
+            #nic_netmask: 255.255.0.0
+            #nic_gateway: 10.0.0.2
+            #nic_name: eth0
+            #nic_on_boot: true
+            #dns_servers: 10.0.0.1
+            #dns_search: example.com
           nics:
             - name: eth0
               profile_name: ovirtmgmt/ovirtmgmt
