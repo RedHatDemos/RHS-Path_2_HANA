@@ -62,15 +62,15 @@
             #dns_servers: 10.0.0.1
             #dns_search: example.com
           nics:
-            - name: nic1
+            - name: eth0
               profile_name: ovirtmgmt
               interface: virtio
               mac_adress: 56:6f:01:a3:00:{{ item }}
-            - name: nic2
+            - name: eth1
               profile_name: HANA
               interface: virtio
               mac_adress: 56:6f:01:a3:01:{{ item }}
-            - name: nic3
+            - name: eth2
               profile_name: corosync
               interface: virtio
               mac_adress: 56:6f:01:a3:02:{{ item }}
