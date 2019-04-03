@@ -37,7 +37,7 @@
           auth: "{{ ovirt_auth }}"
           state: running
           name: vm{{ vmid }}
-          template: rhel-7.4-template
+          template: rhel-7.4-hana-template-ci
           cluster: Default
           #graphical_console:
           #  - headless_mode: true
