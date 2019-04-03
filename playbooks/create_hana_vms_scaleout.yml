@@ -106,16 +106,16 @@
           auth: "{{ ovirt_auth }}"
           name: vm{{ item }}_hana_disk
           vm_name: vm{{ item }}
-          size: 140GiB
+          size: 50GiB
           format: cow
           interface: virtio_scsi
           storage_domain: vms
         with_sequence: start={{ vmid }} end={{ vmid|int + vmnum|int - 1 }} stride=1
 
-      - name: add host to hanavm
+      - name: add host to hanavmso
         add_host:
           name: vm{{ item }}
-          groups: hanavm
+          groups: hanavmso
         with_sequence: start={{ vmid }} end={{ vmid|int + vmnum|int - 1 }} stride=1
       
       - name: remove host identification from ${HOME}/.ssh/known_hosts
@@ -136,7 +136,7 @@
         with_sequence: start={{ vmid }} end={{ vmid|int + vmnum|int - 1 }} stride=1
 
 - name: Register vm{{ vmid }} to vm{{ vmid|int + vmnum|int - 1 }}  and configure disks
-  hosts: hanavm
+  hosts: hanavmso
   
   vars:
     - sap_hostname: "{{ inventory_hostname }}"
@@ -159,8 +159,8 @@
 
             
   roles:
-    - sap-base-settings
     - subscribe-rhn
+    - sap-base-settings
     # rhel-system-roles.network
     - disk-init
 
