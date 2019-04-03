@@ -40,13 +40,13 @@
           auth: "{{ ovirt_auth }}"
           state: running
           name: vm{{ item }}
-          template: rhel-7.4-hana-template-ci
+          template: rhel-7.4-template
           cluster: Default
           #graphical_console:
           #  - headless_mode: true
           high_availability: no
           memory: "{{ ovirt_vm_memory }}"
-          #memory_max: 4GiB
+          memory_max: "{{ ovirt_vm_memory }}"
           cloud_init:
             host_name: vm{{ item }}.example.com
             user_name: root
