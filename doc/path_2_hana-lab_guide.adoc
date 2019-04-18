@@ -1437,9 +1437,9 @@ hana1.example.com | SUCCESS => {
 
 === Install SAP HANA with ansible roles
 ==== Find available roles for SAP deployment
-On http://galaxy.ansible.com[Ansible Galaxy] a lot of ready to use roles exist. Red Hat maintaines the linux-system-roles, which are upstream to supported RHEL System Roles.
+On http://galaxy.ansible.com[Ansible Galaxy] a lot of ready to use roles exist. Red Hat maintains the linux-system-roles, which are upstream to supported RHEL System Roles.
 
-See the follwoing pages for more details:
+See the following pages for more details:
 
    * https://access.redhat.com/articles/3050101[Red Hat Enterprise Linux (RHEL) System Roles]
    * https://galaxy.ansible.com/linux-system-roles/[Linux System Roles]
@@ -1452,7 +1452,7 @@ Search for "SAP" and you will find the following roles:
  * https://galaxy.ansible.com/mk-ansible-roles/saphana-deploy/[saphana-deploy]
  * https://galaxy.ansible.com/mk-ansible-roles/saphana-hsr/[saphana-hsr]
 
-These and some other userful  useful roles can be found here: https://galaxy.ansible.com/mk-ansible-roles/[Roles Overview]
+These and some other useful roles can be found here: https://galaxy.ansible.com/mk-ansible-roles/[Roles Overview]
 
 ==== Install SAP HANA using these Roles
 
