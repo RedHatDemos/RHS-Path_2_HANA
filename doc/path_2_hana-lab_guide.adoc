@@ -179,11 +179,9 @@ This is required for environment in rhpds
 
 1. Connect to the control node (tower):
 
-   # ssh your-sso-login@tower-GUID.rhpds.opentlc.com
+   # ssh root@tower-GUID.rhpds.opentlc.com
 
-2. Become the `root` user:
-
-   # sudo -i
+2. Key in password from found link:https://mojo.redhat.com/docs/DOC-1174612-accessing-red-hat-solutions-lab-in-rhpds[here]
 
 3.  Run a script that attaches the `Extra Packages` pool to make Ansible packages available, installs ansible and creates the ansible user, which will be used in this tutorial:
 
