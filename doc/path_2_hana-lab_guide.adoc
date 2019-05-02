@@ -1324,7 +1324,7 @@ WARNING: You will be able to SSH into the control host, from here you can SSH in
 
 ////
 
-We will use HANA Express for the labs as RedHat is not allowed to provide SAP software for training purpose. So you have to register and download your own HANA Express version.
+We will use HANA Express for the labs as Red Hat is not allowed to provide SAP software for training purpose. So you have to register and download your own HANA Express version.
 
 ### Register for download Hana Express
 
