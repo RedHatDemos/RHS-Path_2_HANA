@@ -238,7 +238,7 @@ TIP: You can check the installation, disks of the server. It looks like a blank 
 
 You might have guessed by now this lab is pretty commandline-centric... :-)
 
-* Don't type everything manually, use copy & paste from the browser when appropriate. But don't stop to think and understand... ;-)
+* Don't type everything manually, use copy & paste from the browser when appropriate. But do stop to think and understand... ;-)
 * All labs where prepared using Vi, but feel free to use mc (function keys can be reached via Esc-<n>) or nano.
 
 TIP: In the lab guide commands you are supposed to run are shown with or without the expected output, whatever makes more sense in the context.
