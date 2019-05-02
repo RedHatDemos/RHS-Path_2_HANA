@@ -229,7 +229,7 @@ Double-check that the managed hosts accept password-less connections with key au
 [root@hana0 ~]$ exit
 ----
 ----
-[root@tower ~]$ ssh serverb.example.com
+[root@tower ~]$ ssh hana1.example.com
 [root@hana0 ~]$ exit
 ----
 TIP: You can check the installation, disks of the server. It looks like a blank RHEL installation from DVD.
